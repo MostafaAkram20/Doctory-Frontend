@@ -40,8 +40,9 @@ import { environment } from '../../../../environments/environment';
               <tr *ngFor="let u of users">
                 <td>
                   <div style="display:flex;align-items:center;gap:10px">
-                    <div class="table-avatar" [style.background]="'linear-gradient(135deg,#7c3aed,#06b6d4)'">
-                      <span style="color:#fff;font-size:12px;font-weight:800">{{ ini(u.fullName) }}</span>
+                    <div class="table-avatar" style="overflow:hidden" [style.background]="u.image_profile ? 'transparent' : 'linear-gradient(135deg,#7c3aed,#06b6d4)'">
+                      <img *ngIf="u.image_profile" [src]="u.image_profile" [alt]="u.fullName" style="width:100%;height:100%;object-fit:cover;border-radius:50%">
+                      <span *ngIf="!u.image_profile" style="color:#fff;font-size:12px;font-weight:800">{{ ini(u.fullName) }}</span>
                     </div>
                     <strong style="font-size:14px">{{ u.fullName }}</strong>
                   </div>

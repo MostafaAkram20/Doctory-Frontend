@@ -245,6 +245,13 @@ textarea.form-control { resize: vertical; min-height: 90px; }
     a { padding:7px 16px; border-radius:var(--r-sm); font-size:14px; font-weight:500; color:var(--text-muted); transition:var(--t);
       &:hover,.active { color:var(--brand-1); background:rgba(124,58,237,.08); } } }
   .nav-right { display:flex; align-items:center; gap:10px; margin-left:auto; }
+  .user-chip { display:flex;align-items:center;gap:10px;padding:6px 12px;border:1px solid var(--border-2);border-radius:999px;background:var(--bg-2);max-width:240px; }
+  .user-avatar { width:30px;height:30px;border-radius:50%;background:var(--brand-gradient);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;overflow:hidden; }
+  .user-avatar--photo { background:transparent; }
+  .user-avatar img { width:100%;height:100%;object-fit:cover; }
+  .user-meta { display:flex;flex-direction:column;min-width:0; }
+  .user-name { font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+  .user-role { font-size:11px;color:var(--text-muted);text-transform:capitalize; }
 }
 
 /* ═══════════════════════════════════════════════
@@ -285,7 +292,9 @@ textarea.form-control { resize: vertical; min-height: 90px; }
   .sb-divider { height:1px; background:var(--border-2); margin:12px 0; }
   .sb-footer { margin-top:auto; padding-top:16px; }
   .sb-user { display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--r);background:var(--bg-3);
-    .sb-user-ava { width:36px;height:36px;border-radius:var(--r-sm);background:var(--brand-gradient);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px; }
+    .sb-user-ava { width:36px;height:36px;border-radius:var(--r-sm);background:var(--brand-gradient);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;overflow:hidden;flex-shrink:0;
+      img { width:100%;height:100%;object-fit:cover; }
+    }
     .sb-user-info { flex:1; strong{display:block;font-size:13px;} span{font-size:11px;color:var(--text-muted);} } }
 }
 

@@ -26,7 +26,10 @@ import { AuthService } from '../../../core/services/auth.service';
         </button>
         <ng-container *ngIf="auth.isLoggedIn(); else guestActions">
           <div class="user-chip" [title]="userDisplayName()">
-            <span class="user-avatar">{{ userInitials() }}</span>
+            <span class="user-avatar" [class.user-avatar--photo]="!!userProfilePhoto()">
+              <img *ngIf="userProfilePhoto()" [src]="userProfilePhoto()" alt="" />
+              <ng-container *ngIf="!userProfilePhoto()">{{ userInitials() }}</ng-container>
+            </span>
             <div class="user-meta">
               <span class="user-name">{{ userDisplayName() }}</span>
               <span class="user-role">{{ auth.getRole() | titlecase }}</span>
@@ -246,11 +249,6 @@ import { AuthService } from '../../../core/services/auth.service';
     .footer { background:#080614;padding:72px 0 0; }
     .footer-grid { display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;padding-bottom:48px;border-bottom:1px solid rgba(255,255,255,.06); h4{color:#fff;font-size:12px;font-weight:700;letter-spacing:.5px;margin-bottom:16px;} a{display:block;font-size:13px;color:rgba(255,255,255,.4);margin-bottom:10px;transition:var(--t); &:hover{color:#fff;}} }
     .footer-bottom { display:flex;align-items:center;justify-content:space-between;padding:20px 0;font-size:13px;color:rgba(255,255,255,.25); }
-    .user-chip { display:flex;align-items:center;gap:10px;padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--bg-2);max-width:240px; }
-    .user-avatar { width:30px;height:30px;border-radius:50%;background:var(--brand-gradient);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0; }
-    .user-meta { display:flex;flex-direction:column;min-width:0; }
-    .user-name { font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
-    .user-role { font-size:11px;color:var(--text-muted);text-transform:capitalize; }
     @media(max-width:768px) { .cta-banner{flex-direction:column;padding:40px 28px;} .cta-emoji{display:none;} .footer-grid{grid-template-columns:1fr 1fr;gap:32px;} }
   `]
 })
@@ -278,6 +276,10 @@ export class LandingComponent implements OnInit {
     const u = this.auth.currentUser();
     if (!u) return '';
     return u.fullName || u.name || [u.firstName, u.lastName].filter(Boolean).join(' ') || u.email || 'User';
+  }
+  userProfilePhoto(): string {
+    const raw = this.auth.currentUser()?.image_profile;
+    return typeof raw === 'string' && raw.trim() ? raw.trim() : '';
   }
   userInitials(): string {
     const name = this.userDisplayName().trim();

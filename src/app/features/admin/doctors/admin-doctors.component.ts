@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { DoctorService } from '../../../core/services/doctor.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { SidebarComponent } from '../../../shared/components/sidebar/sidebar.component';
@@ -41,8 +41,9 @@ import { ToastService } from '../../../core/services/toast.service';
               <tr *ngFor="let d of doctors">
                 <td>
                   <div style="display:flex;align-items:center;gap:10px">
-                    <div class="table-avatar" [style.background]="'linear-gradient(135deg,#10b981,#06b6d4)'">
-                      <span style="color:#fff;font-size:12px;font-weight:800">{{ ini(d.fullName) }}</span>
+                    <div class="table-avatar" style="overflow:hidden" [style.background]="d.image_profile ? 'transparent' : 'linear-gradient(135deg,#10b981,#06b6d4)'">
+                      <img *ngIf="d.image_profile" [src]="d.image_profile" [alt]="d.fullName" style="width:100%;height:100%;object-fit:cover;border-radius:50%">
+                      <span *ngIf="!d.image_profile" style="color:#fff;font-size:12px;font-weight:800">{{ ini(d.fullName) }}</span>
                     </div>
                     <div><strong style="font-size:14px;display:block">{{ d.title }} {{ d.fullName }}</strong><span style="font-size:12px;color:var(--text-muted)">{{ d.email }}</span></div>
                   </div>
@@ -91,6 +92,11 @@ import { ToastService } from '../../../core/services/toast.service';
           </div>
         </div>
         <div class="form-group"><label>Bio</label><textarea class="form-control" rows="3" formControlName="bio"></textarea></div>
+        <div class="form-group">
+          <label>Profile image URL</label>
+          <input class="form-control" type="url" formControlName="image_profile" placeholder="https://…">
+          <div class="error-msg" *ngIf="editForm.get('image_profile')?.touched && editForm.get('image_profile')?.invalid">Enter a valid URL or leave blank</div>
+        </div>
         <div class="form-row-2">
           <div class="form-group">
             <label>Active</label>
@@ -124,7 +130,15 @@ export class AdminDoctorsComponent implements OnInit {
   private st: any;
 
   constructor(public auth: AuthService, public ds: DoctorService, private fb: FormBuilder, private toast: ToastService) {
-    this.editForm = this.fb.group({ specialty: [''], experience: [0], title: ['Dr.'], bio: [''], isActive: [true], isVerified: [false] });
+    this.editForm = this.fb.group({
+      specialty: [''],
+      experience: [0],
+      title: ['Dr.'],
+      bio: [''],
+      image_profile: ['', [Validators.pattern(/^(|https?:\/\/.+)$/i)]],
+      isActive: [true],
+      isVerified: [false],
+    });
   }
 
   ngOnInit() { this.load(); }
@@ -136,9 +150,24 @@ export class AdminDoctorsComponent implements OnInit {
     });
   }
   onSearch() { clearTimeout(this.st); this.st = setTimeout(() => this.load(), 400); }
-  openEdit(d: any) { this.editTarget = d; this.editForm.patchValue({ specialty: d.specialty, experience: d.experience, title: d.title, bio: d.bio || '', isActive: d.isActive, isVerified: d.isVerified }); }
+  openEdit(d: any) {
+    this.editTarget = d;
+    this.editForm.patchValue({
+      specialty: d.specialty,
+      experience: d.experience,
+      title: d.title,
+      bio: d.bio || '',
+      image_profile: d.image_profile || '',
+      isActive: d.isActive,
+      isVerified: d.isVerified,
+    });
+  }
   save() {
     if (!this.editTarget) return;
+    if (this.editForm.invalid) {
+      this.editForm.markAllAsTouched();
+      return;
+    }
     this.saving = true;
     this.ds.updateDoctor(this.editTarget._id, this.editForm.value).subscribe({
       next: (r: any) => { this.saving = false; if (r.success) { Object.assign(this.editTarget, this.editForm.value); this.editTarget = null; this.toast.success('Doctor updated!'); } },

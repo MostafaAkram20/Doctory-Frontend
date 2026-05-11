@@ -16,8 +16,24 @@ import { ThemeService } from '../../../core/services/theme.service';
       <div class="nav-links"><a routerLink="/">Home</a><a routerLink="/doctors">Doctors</a></div>
       <div class="nav-right">
         <button class="theme-toggle" (click)="theme.toggle()">{{ theme.isDark()?'☀️':'🌙' }}</button>
-        <a *ngIf="!auth.isLoggedIn()" routerLink="/login" class="btn btn-brand btn-sm">Sign In</a>
-        <a *ngIf="auth.isLoggedIn()" [routerLink]="'/'+auth.getRole()+'/dashboard'" class="btn btn-ghost btn-sm">Dashboard</a>
+        <ng-container *ngIf="auth.isLoggedIn(); else profileGuestNav">
+          <div class="user-chip" [title]="userDisplayName()">
+            <span class="user-avatar" [class.user-avatar--photo]="!!userProfilePhoto()">
+              <img *ngIf="userProfilePhoto()" [src]="userProfilePhoto()" alt="" />
+              <ng-container *ngIf="!userProfilePhoto()">{{ userInitials() }}</ng-container>
+            </span>
+            <div class="user-meta">
+              <span class="user-name">{{ userDisplayName() }}</span>
+              <span class="user-role">{{ auth.getRole() | titlecase }}</span>
+            </div>
+          </div>
+          <a [routerLink]="dashboardRoute()" class="btn btn-brand btn-sm">Dashboard</a>
+          <button type="button" class="btn btn-ghost btn-sm" (click)="auth.logout()">Logout</button>
+        </ng-container>
+        <ng-template #profileGuestNav>
+          <a routerLink="/login" class="btn btn-ghost btn-sm">Sign In</a>
+          <a routerLink="/register" class="btn btn-brand btn-sm">Get Started</a>
+        </ng-template>
       </div>
     </div>
   </nav>
@@ -147,4 +163,24 @@ export class DoctorProfileComponent implements OnInit {
   ini(n: string) { return n.split(' ').map((x: string)=>x[0]).join('').slice(0,2).toUpperCase(); }
   minFee() { const f=[this.doc?.homeVisit?.fees,this.doc?.video_consulation?.fees].filter(Boolean) as number[]; return f.length?Math.min(...f):0; }
   consultTypes() { const t=[]; if(this.doc?.homeVisit?.available)t.push({icon:'🏠',label:'Home Visit',fee:this.doc.homeVisit.fees}); if(this.doc?.video_consulation?.available)t.push({icon:'📹',label:'Video Call',fee:this.doc.video_consulation.fees}); if(this.doc?.clinic?.length)t.push({icon:'🏥',label:'Clinic Visit',fee:this.doc.clinic[0]?.feveseta||0}); t.push({icon:'🎤',label:'Voice Call',fee:this.doc?.video_consulation?.fees||0}); return t; }
+  userDisplayName(): string {
+    const u = this.auth.currentUser();
+    if (!u) return '';
+    return u.fullName || u.name || [u.firstName, u.lastName].filter(Boolean).join(' ') || u.email || 'User';
+  }
+  userInitials(): string {
+    const name = this.userDisplayName().trim();
+    if (!name) return 'U';
+    return name.split(/\s+/).filter(Boolean).map((x: string) => x[0]).join('').slice(0, 2).toUpperCase();
+  }
+  userProfilePhoto(): string {
+    const raw = this.auth.currentUser()?.image_profile;
+    return typeof raw === 'string' && raw.trim() ? raw.trim() : '';
+  }
+  dashboardRoute(): string {
+    const role = this.auth.getRole();
+    if (role === 'doctor') return '/doctor/dashboard';
+    if (role === 'admin') return '/admin/dashboard';
+    return '/patient/dashboard';
+  }
 }

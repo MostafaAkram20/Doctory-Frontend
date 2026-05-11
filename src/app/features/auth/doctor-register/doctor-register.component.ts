@@ -90,10 +90,21 @@ import { DoctorService } from '../../../core/services/doctor.service';
               <div class="error-msg" *ngIf="form.get('specialty')?.touched && form.get('specialty')?.invalid">Required</div>
             </div>
             <div class="form-group">
-              <label>Medical License No.</label>
-              <input class="form-control" type="number" formControlName="medical_license" placeholder="123456">
-              <div class="error-msg" *ngIf="form.get('medical_license')?.touched && form.get('medical_license')?.invalid">Required</div>
+              <label>Years of experience</label>
+              <input class="form-control" type="number" formControlName="experience" min="0" max="70" step="1" placeholder="e.g. 8">
+              <div class="error-msg" *ngIf="form.get('experience')?.touched && form.get('experience')?.errors?.['required']">Required</div>
+              <div class="error-msg" *ngIf="form.get('experience')?.touched && (form.get('experience')?.errors?.['min'] || form.get('experience')?.errors?.['max'])">Enter a whole number from 0 to 70</div>
             </div>
+          </div>
+          <div class="form-group">
+            <label>Medical License No.</label>
+            <input class="form-control" type="number" formControlName="medical_license" placeholder="123456">
+            <div class="error-msg" *ngIf="form.get('medical_license')?.touched && form.get('medical_license')?.invalid">Required</div>
+          </div>
+          <div class="form-group">
+            <label>Profile image URL <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+            <input class="form-control" type="url" formControlName="image_profile" placeholder="https://example.com/photo.jpg">
+            <div class="error-msg" *ngIf="form.get('image_profile')?.touched && form.get('image_profile')?.invalid">Enter a valid URL</div>
           </div>
           <div class="error-box" *ngIf="err">{{ err }}</div>
           <button type="submit" class="btn btn-brand btn-lg btn-block mt-8" [disabled]="loading">
@@ -136,12 +147,24 @@ export class DoctorRegisterComponent {
   ];
   constructor(private fb: FormBuilder, public auth: AuthService, public theme: ThemeService, private toast: ToastService, private ds: DoctorService, private router: Router) {
     this.specialties = ds.specialties;
-    this.form = this.fb.group({ fullName:['',[Validators.required,Validators.minLength(2)]], email:['',[Validators.required,Validators.email]], password:['',[Validators.required,Validators.minLength(8)]], phone:['',Validators.required], gender:[''], region:['',Validators.required], specialty:['',Validators.required], medical_license:['',Validators.required] });
+    this.form = this.fb.group({
+      fullName: ['', [Validators.required, Validators.minLength(2)]],
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(8)]],
+      phone: ['', Validators.required],
+      gender: [''],
+      region: ['', Validators.required],
+      specialty: ['', Validators.required],
+      experience: ['', [Validators.required, Validators.min(0), Validators.max(70)]],
+      medical_license: ['', Validators.required],
+      image_profile: ['', [Validators.pattern(/^(|https?:\/\/.+)$/i)]],
+    });
   }
   submit() {
     if(this.form.invalid){this.form.markAllAsTouched();return;}
     this.loading=true; this.err='';
-    this.auth.registerDoctor(this.form.value).subscribe({
+    const payload = { ...this.form.value, experience: Number(this.form.value.experience) };
+    this.auth.registerDoctor(payload).subscribe({
       next:(r:any)=>{ this.loading=false; if(r.success){this.toast.success('Doctor account created!');this.router.navigate(['/verify-otp'],{queryParams:{email:this.form.value.email,type:'doctor'}});}else{this.err=r.message;} },
       error:(e:any)=>{ this.loading=false; this.err=e.error?.message||'Registration failed.'; }
     });

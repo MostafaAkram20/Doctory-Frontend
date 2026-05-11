@@ -21,11 +21,24 @@ import { AuthService } from '../../../core/services/auth.service';
       </div>
       <div class="nav-right">
         <button class="theme-toggle" (click)="theme.toggle()">{{ theme.isDark()?'☀️':'🌙' }}</button>
-        <ng-container *ngIf="!auth.isLoggedIn()">
+        <ng-container *ngIf="auth.isLoggedIn(); else doctorsGuestNav">
+          <div class="user-chip" [title]="userDisplayName()">
+            <span class="user-avatar" [class.user-avatar--photo]="!!userProfilePhoto()">
+              <img *ngIf="userProfilePhoto()" [src]="userProfilePhoto()" alt="" />
+              <ng-container *ngIf="!userProfilePhoto()">{{ userInitials() }}</ng-container>
+            </span>
+            <div class="user-meta">
+              <span class="user-name">{{ userDisplayName() }}</span>
+              <span class="user-role">{{ auth.getRole() | titlecase }}</span>
+            </div>
+          </div>
+          <a [routerLink]="dashboardRoute()" class="btn btn-brand btn-sm">Dashboard</a>
+          <button type="button" class="btn btn-ghost btn-sm" (click)="auth.logout()">Logout</button>
+        </ng-container>
+        <ng-template #doctorsGuestNav>
           <a routerLink="/login" class="btn btn-ghost btn-sm">Sign In</a>
           <a routerLink="/register" class="btn btn-brand btn-sm">Get Started</a>
-        </ng-container>
-        <a *ngIf="auth.isLoggedIn()" [routerLink]="'/'+auth.getRole()+'/dashboard'" class="btn btn-brand btn-sm">Dashboard</a>
+        </ng-template>
       </div>
     </div>
   </nav>
@@ -146,4 +159,24 @@ export class DoctorsComponent implements OnInit {
   stars(r: number) { return '★'.repeat(Math.round(r))+'☆'.repeat(5-Math.round(r)); }
   ini(n: string) { return n.split(' ').map((x: string)=>x[0]).join('').slice(0,2).toUpperCase(); }
   minFee(d: any) { const f=[d.homeVisit?.fees,d.video_consulation?.fees].filter(Boolean) as number[]; return f.length?Math.min(...f):0; }
+  userDisplayName(): string {
+    const u = this.auth.currentUser();
+    if (!u) return '';
+    return u.fullName || u.name || [u.firstName, u.lastName].filter(Boolean).join(' ') || u.email || 'User';
+  }
+  userInitials(): string {
+    const name = this.userDisplayName().trim();
+    if (!name) return 'U';
+    return name.split(/\s+/).filter(Boolean).map((x: string) => x[0]).join('').slice(0, 2).toUpperCase();
+  }
+  userProfilePhoto(): string {
+    const raw = this.auth.currentUser()?.image_profile;
+    return typeof raw === 'string' && raw.trim() ? raw.trim() : '';
+  }
+  dashboardRoute(): string {
+    const role = this.auth.getRole();
+    if (role === 'doctor') return '/doctor/dashboard';
+    if (role === 'admin') return '/admin/dashboard';
+    return '/patient/dashboard';
+  }
 }

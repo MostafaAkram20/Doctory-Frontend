@@ -49,7 +49,10 @@ import { SidebarComponent } from '../../../shared/components/sidebar/sidebar.com
 
             <div *ngIf="!loading && appointments.length > 0" style="display:flex;flex-direction:column;gap:10px">
               <div class="appt-row" *ngFor="let a of appointments">
-                <div class="ar-avatar">{{ a.doctor?.specialty?.[0] || '👨‍⚕️' }}</div>
+                <div class="ar-avatar" [style.background]="a.doctor?.image_profile ? 'transparent' : null">
+                  <img *ngIf="a.doctor?.image_profile" [src]="a.doctor.image_profile" [alt]="a.doctor?.fullName || 'Doctor'" />
+                  <span *ngIf="!a.doctor?.image_profile" class="ar-avatar-initials">{{ docInitials(a.doctor?.fullName) }}</span>
+                </div>
                 <div class="ar-info">
                   <strong>{{ a.doctor?.title }} {{ a.doctor?.fullName }}</strong>
                   <span>{{ a.doctor?.specialty }}</span>
@@ -103,7 +106,9 @@ import { SidebarComponent } from '../../../shared/components/sidebar/sidebar.com
   `,
   styles: [`
     .appt-row { display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg-3);border-radius:var(--r-lg); }
-    .ar-avatar { width:42px;height:42px;border-radius:var(--r);background:var(--brand-gradient);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0; }
+    .ar-avatar { width:42px;height:42px;border-radius:var(--r);background:var(--brand-gradient);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;overflow:hidden; }
+    .ar-avatar img { width:100%;height:100%;object-fit:cover; }
+    .ar-avatar-initials { font-size:12px;font-weight:800;line-height:1; }
     .ar-info { flex:1; strong{display:block;font-size:13px;} span{font-size:11px;color:var(--text-muted);} }
     .ar-date { text-align:right;margin-right:8px; strong{display:block;font-size:13px;} span{font-size:11px;color:var(--text-muted);} }
     .quick-action { display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg-3);border-radius:var(--r-lg);transition:var(--t); &:hover{background:rgba(124,58,237,.08);border-color:var(--brand-1);} }
@@ -150,5 +155,10 @@ export class PatientDashboardComponent implements OnInit {
       },
       error: () => this.loading = false
     });
+  }
+
+  docInitials(fullName?: string): string {
+    if (!fullName?.trim()) return 'DR';
+    return fullName.split(/\s+/).map((x: string) => x[0]).join('').slice(0, 2).toUpperCase();
   }
 }

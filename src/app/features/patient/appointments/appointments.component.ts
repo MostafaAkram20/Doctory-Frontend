@@ -40,9 +40,9 @@ import { ToastService } from '../../../core/services/toast.service';
                [style.animation-delay]="i*0.05+'s'" style="animation:fadeInUp .4s ease forwards;opacity:0">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
               <div style="display:flex;align-items:center;gap:12px">
-                <div class="doc-avatar-sm">
-                  <img *ngIf="a.doctor?.image_profile" [src]="a.doctor.image_profile" style="width:100%;height:100%;object-fit:cover;border-radius:50%">
-                  <span *ngIf="!a.doctor?.image_profile">👨‍⚕️</span>
+                <div class="doc-avatar-sm" [style.background]="a.doctor?.image_profile ? 'transparent' : null">
+                  <img *ngIf="a.doctor?.image_profile" [src]="a.doctor.image_profile" [alt]="a.doctor?.fullName || 'Doctor'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">
+                  <span *ngIf="!a.doctor?.image_profile" class="doc-avatar-sm-initials">{{ docInitials(a.doctor?.fullName) }}</span>
                 </div>
                 <div>
                   <strong style="font-size:15px;display:block">{{ a.doctor?.title }} {{ a.doctor?.fullName }}</strong>
@@ -105,7 +105,8 @@ import { ToastService } from '../../../core/services/toast.service';
   </div>
   `,
   styles: [`
-    .doc-avatar-sm { width:46px;height:46px;border-radius:50%;background:rgba(124,58,237,.1);display:flex;align-items:center;justify-content:center;font-size:20px;overflow:hidden;flex-shrink:0; }
+    .doc-avatar-sm { width:46px;height:46px;border-radius:50%;background:var(--brand-gradient);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;overflow:hidden;flex-shrink:0; }
+    .doc-avatar-sm-initials { font-size:13px;font-weight:800;line-height:1; }
     .appt-meta-grid { display:grid;grid-template-columns:repeat(4,1fr);gap:10px;background:var(--bg-3);border-radius:var(--r-lg);padding:12px; }
     .amg-item { display:flex;align-items:center;gap:6px;font-size:13px; }
     @media(max-width:600px){.appt-meta-grid{grid-template-columns:repeat(2,1fr);}}
@@ -149,5 +150,10 @@ export class PatientAppointmentsComponent implements OnInit {
       },
       error: () => this.cancelLoading = false
     });
+  }
+
+  docInitials(fullName?: string): string {
+    if (!fullName?.trim()) return 'DR';
+    return fullName.split(/\s+/).map((x: string) => x[0]).join('').slice(0, 2).toUpperCase();
   }
 }

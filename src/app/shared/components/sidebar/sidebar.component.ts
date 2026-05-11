@@ -34,7 +34,10 @@ export interface NavItem { icon: string; label: string; route: string; }
         </button>
         <div class="sb-divider" style="margin:8px 0"></div>
         <div class="sb-user">
-          <div class="sb-user-ava">{{ initials }}</div>
+          <div class="sb-user-ava" [class.sb-user-ava--photo]="!!profilePhotoUrl" [style.background]="profilePhotoUrl ? 'transparent' : null">
+            <img *ngIf="profilePhotoUrl" [src]="profilePhotoUrl" alt="" />
+            <ng-container *ngIf="!profilePhotoUrl">{{ initials }}</ng-container>
+          </div>
           <div class="sb-user-info">
             <strong>{{ userName }}</strong>
             <span>{{ auth.getRole() }}</span>
@@ -55,6 +58,10 @@ export class SidebarComponent {
     return r === 'admin' ? 'Admin' : r === 'doctor' ? 'Doctor' : 'Patient';
   }
   get userName() { return this.auth.currentUser()?.fullName?.split(' ')[0] || 'User'; }
+  get profilePhotoUrl(): string {
+    const raw = this.auth.currentUser()?.image_profile;
+    return typeof raw === 'string' && raw.trim() ? raw.trim() : '';
+  }
   get initials() {
     const n = this.auth.currentUser()?.fullName || '';
     return n.split(' ').map((x: string) => x[0]).join('').slice(0, 2).toUpperCase();
