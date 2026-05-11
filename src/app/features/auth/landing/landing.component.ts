@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ThemeService } from '../../../core/services/theme.service';
 import { DoctorService } from '../../../core/services/doctor.service';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-landing',
@@ -23,8 +24,21 @@ import { DoctorService } from '../../../core/services/doctor.service';
         <button class="theme-toggle" (click)="theme.toggle()" [title]="theme.isDark() ? 'Light mode' : 'Dark mode'">
           {{ theme.isDark() ? '☀️' : '🌙' }}
         </button>
-        <a routerLink="/login" class="btn btn-ghost btn-sm">Sign In</a>
-        <a routerLink="/register" class="btn btn-brand btn-sm">Get Started</a>
+        <ng-container *ngIf="auth.isLoggedIn(); else guestActions">
+          <div class="user-chip" [title]="userDisplayName()">
+            <span class="user-avatar">{{ userInitials() }}</span>
+            <div class="user-meta">
+              <span class="user-name">{{ userDisplayName() }}</span>
+              <span class="user-role">{{ auth.getRole() | titlecase }}</span>
+            </div>
+          </div>
+          <a [routerLink]="dashboardRoute()" class="btn btn-brand btn-sm">Dashboard</a>
+          <button type="button" class="btn btn-ghost btn-sm" (click)="auth.logout()">Logout</button>
+        </ng-container>
+        <ng-template #guestActions>
+          <a routerLink="/login" class="btn btn-ghost btn-sm">Sign In</a>
+          <a routerLink="/register" class="btn btn-brand btn-sm">Get Started</a>
+        </ng-template>
       </div>
     </div>
   </nav>
@@ -232,6 +246,11 @@ import { DoctorService } from '../../../core/services/doctor.service';
     .footer { background:#080614;padding:72px 0 0; }
     .footer-grid { display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;padding-bottom:48px;border-bottom:1px solid rgba(255,255,255,.06); h4{color:#fff;font-size:12px;font-weight:700;letter-spacing:.5px;margin-bottom:16px;} a{display:block;font-size:13px;color:rgba(255,255,255,.4);margin-bottom:10px;transition:var(--t); &:hover{color:#fff;}} }
     .footer-bottom { display:flex;align-items:center;justify-content:space-between;padding:20px 0;font-size:13px;color:rgba(255,255,255,.25); }
+    .user-chip { display:flex;align-items:center;gap:10px;padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--bg-2);max-width:240px; }
+    .user-avatar { width:30px;height:30px;border-radius:50%;background:var(--brand-gradient);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0; }
+    .user-meta { display:flex;flex-direction:column;min-width:0; }
+    .user-name { font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+    .user-role { font-size:11px;color:var(--text-muted);text-transform:capitalize; }
     @media(max-width:768px) { .cta-banner{flex-direction:column;padding:40px 28px;} .cta-emoji{display:none;} .footer-grid{grid-template-columns:1fr 1fr;gap:32px;} }
   `]
 })
@@ -250,9 +269,25 @@ export class LandingComponent implements OnInit {
     { icon:'✅', title:'Get Confirmed', desc:'Instant confirmation and reminders for your appointment.' },
     { icon:'🩺', title:'Get Treated',   desc:'Visit in-person, at home, or via video call.' },
   ];
-  constructor(public theme: ThemeService, private ds: DoctorService) {}
+  constructor(public theme: ThemeService, private ds: DoctorService, public auth: AuthService) {}
   ngOnInit() { this.ds.getDoctors({ limit: 4 }).subscribe({ next: (r: any) => { if (r.success) this.doctors = r.data.doctors; } }); }
   stars(r: number) { return '★'.repeat(Math.round(r)) + '☆'.repeat(5 - Math.round(r)); }
   initials(n: string) { return n.split(' ').map((x: string) => x[0]).join('').slice(0, 2).toUpperCase(); }
   minFee(d: any) { const f=[d.homeVisit?.fees,d.video_consulation?.fees].filter(Boolean) as number[]; return f.length?Math.min(...f):0; }
+  userDisplayName(): string {
+    const u = this.auth.currentUser();
+    if (!u) return '';
+    return u.fullName || u.name || [u.firstName, u.lastName].filter(Boolean).join(' ') || u.email || 'User';
+  }
+  userInitials(): string {
+    const name = this.userDisplayName().trim();
+    if (!name) return 'U';
+    return name.split(' ').filter(Boolean).map((x: string) => x[0]).join('').slice(0, 2).toUpperCase();
+  }
+  dashboardRoute(): string {
+    const role = this.auth.getRole();
+    if (role === 'doctor') return '/doctor/dashboard';
+    if (role === 'admin') return '/admin/dashboard';
+    return '/patient/dashboard';
+  }
 }
