@@ -13,4 +13,6 @@ export class ClinicService {
   updateClinic(id:string,data:any): Observable<any> { return this.http.patch<any>(`${this.api}/${id}`,data); }
   deleteClinic(id:string): Observable<any> { return this.http.delete<any>(`${this.api}/${id}`); }
   addScheduleSlots(cid:string,slots:any[]): Observable<any> { return this.http.post<any>(`${this.api}/${cid}/schedule`,{slots}); }
+  /** Links an existing doctor to a clinic (expects backend POST /clinics/:id/doctors with { doctorId }). */
+  addDoctorToClinic(cid:string, doctorId:string): Observable<any> { return this.http.post<any>(`${this.api}/${cid}/doctors`,{ doctorId }); }
 }

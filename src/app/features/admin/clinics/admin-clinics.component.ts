@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ClinicService } from '../../../core/services/clinic.service';
+import { DoctorService } from '../../../core/services/doctor.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { SidebarComponent } from '../../../shared/components/sidebar/sidebar.component';
 import { ToastService } from '../../../core/services/toast.service';
@@ -66,9 +67,14 @@ import { ToastService } from '../../../core/services/toast.service';
               </div>
             </div>
 
-            <button class="btn btn-outline btn-sm" style="width:100%;justify-content:center;margin-top:14px" (click)="openSlots(c)">
-              📅 Manage Schedule
-            </button>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
+              <button class="btn btn-outline btn-sm" style="width:100%;justify-content:center" (click)="openSlots(c)">
+                📅 Manage Schedule
+              </button>
+              <button class="btn btn-outline btn-sm" style="width:100%;justify-content:center" (click)="openAddDoctor(c)">
+                👨‍⚕️ Add Doctor
+              </button>
+            </div>
           </div>
         </div>
 
@@ -192,6 +198,38 @@ import { ToastService } from '../../../core/services/toast.service';
       </div>
     </div>
   </div>
+
+  <!-- Add doctor to clinic -->
+  <div class="overlay" *ngIf="addDoctorClinic" (click)="closeAddDoctor()">
+    <div class="modal" style="max-width:520px" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <h3>Add Doctor — {{ addDoctorClinic.name }}</h3>
+        <button class="close" (click)="closeAddDoctor()">×</button>
+      </div>
+      <div class="search-bar" style="margin-bottom:14px">
+        <span class="search-icon">🔍</span>
+        <input [(ngModel)]="doctorPickSearch" placeholder="Search by name, email, or specialty…">
+      </div>
+      <div *ngIf="pickDoctorsLoading" style="display:flex;justify-content:center;padding:32px"><div class="spinner" style="width:36px;height:36px"></div></div>
+      <div class="doctor-pick-scroll" *ngIf="!pickDoctorsLoading && filteredPickDoctors().length">
+        <div class="doctor-pick-row" *ngFor="let d of filteredPickDoctors()">
+          <div class="dp-info">
+            <strong>{{ d.title || 'Dr.' }} {{ d.fullName }}</strong>
+            <span>{{ d.specialty }} · {{ d.email }}</span>
+          </div>
+          <button type="button" class="btn btn-brand btn-xs" (click)="assignDoctor(d)" [disabled]="assigningDoctorId === d._id">
+            <span class="spinner" style="width:14px;height:14px" *ngIf="assigningDoctorId === d._id"></span>
+            {{ assigningDoctorId === d._id ? 'Adding…' : 'Add' }}
+          </button>
+        </div>
+      </div>
+      <div class="empty-state" style="padding:24px" *ngIf="!pickDoctorsLoading && !filteredPickDoctors().length">
+        <div class="es-icon" style="font-size:28px">👨‍⚕️</div>
+        <p *ngIf="!pickDoctors.length">No doctors in the system yet.</p>
+        <p *ngIf="pickDoctors.length">No matching doctors, or everyone is already linked to this clinic.</p>
+      </div>
+    </div>
+  </div>
   `,
   styles: [`
     .clinics-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px; }
@@ -207,19 +245,24 @@ import { ToastService } from '../../../core/services/toast.service';
     .sr-day { font-weight:600;min-width:72px; }
     .sr-date { color:var(--text-muted);min-width:52px; }
     .sr-time { flex:1; }
+    .doctor-pick-scroll { max-height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:8px; }
+    .doctor-pick-row { display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;background:var(--bg-3);border-radius:var(--r-lg); }
+    .dp-info { flex:1;min-width:0; strong{display:block;font-size:13px;margin-bottom:2px;} span{font-size:11px;color:var(--text-muted);} }
   `]
 })
 export class AdminClinicsComponent implements OnInit {
   clinics: any[] = []; loading = true; search = ''; showModal = false;
   editTarget: any = null; form: FormGroup; saving = false; formErr = '';
   slotTarget: any = null; addingSlot = false;
+  addDoctorClinic: any = null; pickDoctors: any[] = []; pickDoctorsLoading = false;
+  doctorPickSearch = ''; assigningDoctorId: string | null = null;
   minDate = new Date().toISOString().split('T')[0];
   days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
   ns = { dayOfWeek: 'monday', date: '', startTime: '09:00', endTime: '09:30' };
   nav = [{ label: 'Admin', items: [{ icon: '📊', label: 'Dashboard', route: '/admin/dashboard' }, { icon: '👥', label: 'Users', route: '/admin/users' }, { icon: '👨‍⚕️', label: 'Doctors', route: '/admin/doctors' }, { icon: '🏥', label: 'Clinics', route: '/admin/clinics' }] }];
   private st: any;
 
-  constructor(public auth: AuthService, private cs: ClinicService, private fb: FormBuilder, private toast: ToastService) {
+  constructor(public auth: AuthService, private cs: ClinicService, private ds: DoctorService, private fb: FormBuilder, private toast: ToastService) {
     this.form = this.fb.group({ name: ['', Validators.required], city: ['', Validators.required], governorate: [''], street: [''], phone: [''], feveseta: ['', Validators.required] });
   }
 
@@ -265,6 +308,63 @@ export class AdminClinicsComponent implements OnInit {
         }
       },
       error: () => this.addingSlot = false
+    });
+  }
+
+  openAddDoctor(c: any) {
+    this.addDoctorClinic = c;
+    this.doctorPickSearch = '';
+    this.pickDoctors = [];
+    this.pickDoctorsLoading = true;
+    this.ds.getDoctors({ limit: 200 }).subscribe({
+      next: (r: any) => {
+        this.pickDoctorsLoading = false;
+        if (r.success) this.pickDoctors = r.data.doctors || [];
+      },
+      error: () => { this.pickDoctorsLoading = false; this.toast.error('Could not load doctors.'); }
+    });
+  }
+  closeAddDoctor() {
+    this.addDoctorClinic = null;
+    this.pickDoctors = [];
+    this.assigningDoctorId = null;
+  }
+  clinicHasDoctor(docId: string): boolean {
+    const list = this.addDoctorClinic?.Doctor || [];
+    return list.some((x: any) => (typeof x === 'string' ? x : x?._id) === docId);
+  }
+  filteredPickDoctors(): any[] {
+    const q = (this.doctorPickSearch || '').toLowerCase().trim();
+    return this.pickDoctors.filter((d: any) => {
+      if (this.clinicHasDoctor(d._id)) return false;
+      if (!q) return true;
+      return `${d.fullName || ''} ${d.email || ''} ${d.specialty || ''}`.toLowerCase().includes(q);
+    });
+  }
+  assignDoctor(doc: any) {
+    if (!this.addDoctorClinic) return;
+    this.assigningDoctorId = doc._id;
+    this.cs.addDoctorToClinic(this.addDoctorClinic._id, doc._id).subscribe({
+      next: (r: any) => {
+        this.assigningDoctorId = null;
+        if (!r.success) {
+          this.toast.error(r.message || 'Could not add doctor.');
+          return;
+        }
+        const updated = r.data?.clinic;
+        if (updated?.Doctor) {
+          this.addDoctorClinic.Doctor = updated.Doctor;
+          const c = this.clinics.find(x => x._id === this.addDoctorClinic._id);
+          if (c) c.Doctor = updated.Doctor;
+        } else {
+          this.load();
+        }
+        this.toast.success(`${doc.title || 'Dr.'} ${doc.fullName} added to this clinic.`);
+      },
+      error: (e: any) => {
+        this.assigningDoctorId = null;
+        this.toast.error(e.error?.message || 'Could not add doctor.');
+      }
     });
   }
 }
