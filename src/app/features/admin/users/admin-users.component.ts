@@ -89,7 +89,7 @@ export class AdminUsersComponent implements OnInit {
   }
   onSearch() { clearTimeout(this.st); this.st = setTimeout(() => { this.page = 1; this.load(); }, 400); }
   toggle(u: any) {
-    this.http.patch<any>(`${environment.apiUrl}/admin/users/${u.id}/toggle-status`, {}).subscribe({
+    this.http.patch<any>(`${environment.apiUrl}/admin/users/${u._id}/toggle-status`, {}).subscribe({
       next: (r: any) => { if (r.success) { u.isVerified = !u.isVerified; this.toast.success(`User ${u.isVerified ? 'activated' : 'deactivated'}.`); } }
     });
   }
