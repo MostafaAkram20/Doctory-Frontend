@@ -13,7 +13,7 @@ export interface NavItem { icon: string; label: string; route: string; }
   template: `
     <aside class="sidebar">
       <div class="sb-logo">
-        <span style="background:var(--brand-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Doct</span>ory
+        <span style="background:var(--brand-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Doctory</span>
         <small>{{ roleLabel }}</small>
       </div>
 
@@ -42,7 +42,7 @@ export interface NavItem { icon: string; label: string; route: string; }
             <strong>{{ userName }}</strong>
             <span>{{ auth.getRole() }}</span>
           </div>
-          <button style="border:none;background:none;cursor:pointer;font-size:18px;color:var(--text-muted)" title="Logout" (click)="auth.logout()">🚪</button>
+          <button style="border:none;background:none;cursor:pointer;font-size:18px;color:var(--text-muted)" title="Logout" (click)="auth.logout()">➜] Logout</button>
         </div>
       </div>
     </aside>

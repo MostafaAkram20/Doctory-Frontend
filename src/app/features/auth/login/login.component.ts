@@ -15,7 +15,7 @@ import { ToastService } from '../../../core/services/toast.service';
     <!-- Left Panel -->
     <div class="auth-panel">
       <div class="auth-panel-inner">
-        <a routerLink="/" class="auth-logo">Doct<span>ory</span></a>
+        <a routerLink="/" class="auth-logo">Doctory</a>
         <div class="auth-visual-area">
           <div class="av-blob">🏥</div>
           <div class="av-stat av-stat-1">
@@ -33,7 +33,7 @@ import { ToastService } from '../../../core/services/toast.service';
         </div>
         <div class="auth-panel-quote">
           <p>"The best healthcare experience I've ever had. Booked in under 2 minutes."</p>
-          <div class="quote-author"><div class="qa-avatar">S</div><div><strong>Sara M.</strong><span>Cairo, Egypt</span></div></div>
+          <!-- <div class="quote-author"><div class="qa-avatar">S</div><div><strong></strong><span>Cairo, Egypt</span></div></div> -->
         </div>
       </div>
     </div>

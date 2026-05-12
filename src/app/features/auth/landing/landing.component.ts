@@ -13,7 +13,7 @@ import { AuthService } from '../../../core/services/auth.service';
   <!-- NAV -->
   <nav class="pub-nav">
     <div class="container" style="display:flex;align-items:center;gap:40px;height:100%">
-      <div class="nav-logo">Doct<span>ory</span></div>
+      <div class="nav-logo">Doctory</div>
       <div class="nav-links">
         <a routerLink="/" class="active">Home</a>
         <a routerLink="/doctors">Find Doctors</a>
@@ -116,7 +116,7 @@ import { AuthService } from '../../../core/services/auth.service';
         <h2 style="font-size:clamp(28px,4vw,42px);margin-bottom:12px">Browse by <span class="text-gradient">Specialty</span></h2>
         <p style="color:var(--text-muted);font-size:16px">Find the right specialist for your health needs</p>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:50px">
         <a *ngFor="let s of specialties; let i = index"
            [routerLink]="'/doctors'" [queryParams]="{specialty:s.name}"
            class="spec-card card card-hover"
@@ -232,7 +232,8 @@ import { AuthService } from '../../../core/services/auth.service';
       <div class="footer-bottom">
         <span>© 2025 Doctory — NTI Final Project</span>
         <div style="display:flex;gap:16px">
-          <span style="color:rgba(255,255,255,.3)">Built with ❤️ in Egypt</span>
+          
+          <span style="color:rgba(255,255,255,.3)"><a href="https://github.com/MostafaAkram20/"> Github Repository</a></span>
         </div>
       </div>
     </div>
