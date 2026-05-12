@@ -149,7 +149,7 @@ import { ToastService } from '../../../core/services/toast.service';
             </div>
             <h3 style="font-size:15px;text-align:center;margin-bottom:4px">{{ doc.title }} {{ doc.fullName }}</h3>
             <p style="text-align:center;color:var(--brand-1);font-size:13px;font-weight:600;margin-bottom:8px">{{ doc.specialty }}</p>
-            <p style="text-align:center;font-size:12px;color:var(--text-muted)">⭐ {{ doc.rating | number:'1.1-1' }} · {{ doc.experience }} yrs exp</p>
+            <p style="text-align:center;font-size:12px;color:var(--text-muted)">⭐ {{ (doc.rating ?? 0) | number:'1.1-1' }} ({{ doc.reviewCount ?? 0 }}) · {{ doc.experience }} yrs exp</p>
             <div class="divider"></div>
             <div style="font-size:12px;color:var(--text-muted)">
               <div style="margin-bottom:6px">📍 {{ doc.region }}</div>

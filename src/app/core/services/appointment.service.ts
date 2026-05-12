@@ -15,4 +15,8 @@ export class AppointmentService {
   cancelAppointment(id:string,reason?:string): Observable<any> { return this.http.patch<any>(`${this.api}/${id}/cancel`,{cancellationReason:reason}); }
   addNotes(id:string,data:any): Observable<any> { return this.http.patch<any>(`${this.api}/${id}/notes`,data); }
   markNoShow(id:string): Observable<any> { return this.http.patch<any>(`${this.api}/${id}/no-show`,{}); }
+  /** POST body: `{ rating: 1–5, comment?: string }` — only for completed appointments; backend updates doctor aggregates. */
+  submitAppointmentReview(id: string, body: { rating: number; comment?: string }): Observable<any> {
+    return this.http.post<any>(`${this.api}/${id}/review`, body);
+  }
 }

@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
 import { DoctorService } from '../../../core/services/doctor.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ThemeService } from '../../../core/services/theme.service';
@@ -63,7 +65,10 @@ import { ThemeService } from '../../../core/services/theme.service';
           <h1 style="font-size:28px;margin-bottom:6px">{{ doc.title||'Dr.' }} {{ doc.fullName }}</h1>
           <div class="spec-pill">{{ doc.specialty }}</div>
           <div class="prof-meta-row">
-            <div class="pm-item"><span>⭐</span><span>{{ doc.rating | number:'1.1-1' }} ({{ doc.reviewCount }} reviews)</span></div>
+            <div class="pm-item prof-rating-line">
+              <span class="stars-prof" [attr.aria-label]="'Average rating ' + displayRating() + ' out of 5'">{{ stars(displayRating()) }}</span>
+              <span><strong>{{ displayRating() | number:'1.1-1' }}</strong> · {{ displayReviewCount() }} {{ displayReviewCount() === 1 ? 'review' : 'reviews' }}</span>
+            </div>
             <div class="pm-item"><span>🏥</span><span>{{ doc.experience }} Years Experience</span></div>
             <div class="pm-item"><span>📍</span><span>{{ doc.region }}</span></div>
             <div class="pm-item" *ngIf="doc.languages?.length"><span>🌍</span><span>{{ doc.languages?.join(', ') }}</span></div>
@@ -89,6 +94,22 @@ import { ThemeService } from '../../../core/services/theme.service';
           <div class="card mb-20" *ngIf="doc.bio">
             <div class="section-tag">About</div>
             <p style="color:var(--text-muted);line-height:1.8;font-size:14px">{{ doc.bio }}</p>
+          </div>
+
+          <div class="card mb-20" *ngIf="reviews.length || displayReviewCount()">
+            <div class="section-tag">Patient reviews</div>
+            <p *ngIf="!reviews.length" style="font-size:13px;color:var(--text-muted);line-height:1.6;margin:0 0 8px 0">
+              Average <strong>{{ displayRating() | number:'1.1-1' }}</strong> out of 5 from <strong>{{ displayReviewCount() }}</strong> patient {{ displayReviewCount() === 1 ? 'rating' : 'ratings' }}. Written reviews will show below when patients add them.
+            </p>
+            <div class="patient-review-list" *ngIf="reviews.length">
+              <div class="patient-review-card" *ngFor="let rev of reviews">
+                <div class="pr-head">
+                  <span class="stars-prof sm">{{ stars(reviewStars(rev)) }}</span>
+                  <span class="pr-meta">{{ reviewAuthor(rev) }}<ng-container *ngIf="rev.createdAt"> · {{ rev.createdAt | date:'mediumDate' }}</ng-container></span>
+                </div>
+                <p class="pr-body" *ngIf="reviewText(rev)">{{ reviewText(rev) }}</p>
+              </div>
+            </div>
           </div>
 
           <!-- Consultation Types -->
@@ -141,6 +162,14 @@ import { ThemeService } from '../../../core/services/theme.service';
     .spec-pill { display:inline-block;background:rgba(124,58,237,.1);color:var(--brand-1);font-size:13px;font-weight:600;padding:4px 12px;border-radius:20px;margin-bottom:14px; }
     .prof-meta-row { display:flex;flex-wrap:wrap;gap:14px;margin-bottom:16px; }
     .pm-item { display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-muted); }
+    .prof-rating-line { flex-wrap:wrap; align-items:center; gap:8px; }
+    .stars-prof { color:#f59e0b; font-size:15px; letter-spacing:1px; font-family:system-ui,sans-serif; line-height:1; }
+    .stars-prof.sm { font-size:13px; }
+    .patient-review-list { display:flex; flex-direction:column; gap:14px; }
+    .patient-review-card { padding:14px 16px; background:var(--bg-3); border-radius:var(--r-lg); border:1px solid var(--border-2); }
+    .pr-head { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:8px; }
+    .pr-meta { font-size:12px; color:var(--text-muted); }
+    .pr-body { font-size:14px; color:var(--text); line-height:1.6; margin:0; }
     .prof-counters { display:flex;align-items:center;gap:20px; }
     .pc-item { display:flex;flex-direction:column; strong{font-family:'Bricolage Grotesque',sans-serif;font-size:20px;font-weight:800;} span{font-size:11px;color:var(--text-muted);} }
     .pc-sep { width:1px;height:32px;background:var(--border-2); }
@@ -157,9 +186,51 @@ import { ThemeService } from '../../../core/services/theme.service';
   `]
 })
 export class DoctorProfileComponent implements OnInit {
-  doc: any = null; loading = true;
+  doc: any = null; loading = true; reviews: any[] = [];
   constructor(private route: ActivatedRoute, private ds: DoctorService, public auth: AuthService, public theme: ThemeService) {}
-  ngOnInit() { const id=this.route.snapshot.paramMap.get('id')!; this.ds.getDoctorById(id).subscribe({ next:(r:any)=>{ this.loading=false; if(r.success) this.doc=r.data.doctor; }, error:()=>this.loading=false }); }
+  ngOnInit() {
+    const id = this.route.snapshot.paramMap.get('id')!;
+    this.ds.getDoctorById(id).subscribe({
+      next: (r: any) => {
+        this.loading = false;
+        if (r.success) {
+          this.doc = r.data.doctor;
+          const embedded = this.doc?.reviews;
+          this.reviews = Array.isArray(embedded) ? embedded : [];
+        }
+        if (!this.reviews.length) {
+          this.ds.getDoctorReviews(id).pipe(catchError(() => of(null))).subscribe((rev: any) => {
+            if (rev?.success && Array.isArray(rev.data?.reviews)) this.reviews = rev.data.reviews;
+          });
+        }
+      },
+      error: () => (this.loading = false),
+    });
+  }
+  displayRating(): number {
+    const n = Number(this.doc?.rating);
+    return Number.isFinite(n) ? n : 0;
+  }
+  displayReviewCount(): number {
+    const n = Number(this.doc?.reviewCount);
+    return Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0;
+  }
+  stars(r: number): string {
+    const n = Math.min(5, Math.max(0, Math.round(r || 0)));
+    return '★'.repeat(n) + '☆'.repeat(5 - n);
+  }
+  reviewStars(rev: any): number {
+    const v = rev?.rating ?? rev?.stars;
+    return v != null ? Number(v) : 0;
+  }
+  reviewText(rev: any): string {
+    const t = rev?.comment ?? rev?.review ?? rev?.text;
+    return typeof t === 'string' ? t.trim() : '';
+  }
+  reviewAuthor(rev: any): string {
+    const n = rev?.patientName ?? rev?.patient?.fullName ?? rev?.author;
+    return typeof n === 'string' && n.trim() ? n.trim() : 'Patient';
+  }
   ini(n: string) { return n.split(' ').map((x: string)=>x[0]).join('').slice(0,2).toUpperCase(); }
   minFee() { const f=[this.doc?.homeVisit?.fees,this.doc?.video_consulation?.fees].filter(Boolean) as number[]; return f.length?Math.min(...f):0; }
   consultTypes() { const t=[]; if(this.doc?.homeVisit?.available)t.push({icon:'🏠',label:'Home Visit',fee:this.doc.homeVisit.fees}); if(this.doc?.video_consulation?.available)t.push({icon:'📹',label:'Video Call',fee:this.doc.video_consulation.fees}); if(this.doc?.clinic?.length)t.push({icon:'🏥',label:'Clinic Visit',fee:this.doc.clinic[0]?.feveseta||0}); t.push({icon:'🎤',label:'Voice Call',fee:this.doc?.video_consulation?.fees||0}); return t; }

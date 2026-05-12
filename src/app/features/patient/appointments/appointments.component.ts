@@ -67,6 +67,17 @@ import { ToastService } from '../../../core/services/toast.service';
             <div *ngIf="a.symptoms?.length" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px">
               <span *ngFor="let s of a.symptoms" class="tag">{{ s }}</span>
             </div>
+            <div *ngIf="a.status === 'completed' && appointmentRated(a)" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border-2)">
+              <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px">Your rating</div>
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <span class="rate-stars-display" [attr.aria-label]="'Rated ' + ratingValue(a) + ' out of 5'">{{ stars(ratingValue(a)) }}</span>
+                <strong style="font-size:14px">{{ ratingValue(a) }}/5</strong>
+              </div>
+              <p *ngIf="ratingComment(a)" style="font-size:13px;color:var(--text-muted);margin-top:10px;line-height:1.5">{{ ratingComment(a) }}</p>
+            </div>
+            <div *ngIf="appointmentCanRate(a)" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border-2);display:flex;justify-content:flex-end">
+              <button type="button" class="btn btn-brand btn-sm" (click)="openReview(a)">⭐ Rate this visit</button>
+            </div>
             <div *ngIf="['pending','confirmed'].includes(a.status)" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border-2);display:flex;justify-content:flex-end;gap:8px">
               <button class="btn btn-danger btn-sm" (click)="openCancel(a)" [disabled]="actionId===a._id">Cancel Appointment</button>
             </div>
@@ -103,6 +114,35 @@ import { ToastService } from '../../../core/services/toast.service';
       </div>
     </div>
   </div>
+
+  <!-- Rate visit modal -->
+  <div class="overlay" *ngIf="reviewTarget" (click)="closeReview()">
+    <div class="modal" (click)="$event.stopPropagation()" style="max-width:420px">
+      <div class="modal-head">
+        <h3>Rate your visit</h3>
+        <button type="button" class="close" (click)="closeReview()">×</button>
+      </div>
+      <p style="font-size:14px;color:var(--text-muted);margin-bottom:16px">
+        How was your appointment with <strong>{{ reviewTarget?.doctor?.title }} {{ reviewTarget?.doctor?.fullName }}</strong>?
+      </p>
+      <div class="form-group">
+        <label>Rating (required)</label>
+        <div class="rate-star-row" role="group" aria-label="Star rating">
+          <button type="button" *ngFor="let n of [1,2,3,4,5]" class="rate-star-btn" [class.active]="reviewStars >= n" (click)="reviewStars = n" [attr.aria-pressed]="reviewStars >= n" [attr.aria-label]="n + ' stars'">★</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Review (optional)</label>
+        <textarea class="form-control" rows="4" [(ngModel)]="reviewComment" placeholder="Share your experience with other patients…" maxlength="2000"></textarea>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button type="button" class="btn btn-ghost" (click)="closeReview()">Cancel</button>
+        <button type="button" class="btn btn-brand" (click)="submitReview()" [disabled]="reviewSubmitting || reviewStars < 1">
+          {{ reviewSubmitting ? 'Submitting…' : 'Submit' }}
+        </button>
+      </div>
+    </div>
+  </div>
   `,
   styles: [`
     .doc-avatar-sm { width:46px;height:46px;border-radius:50%;background:var(--brand-gradient);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;overflow:hidden;flex-shrink:0; }
@@ -110,11 +150,17 @@ import { ToastService } from '../../../core/services/toast.service';
     .appt-meta-grid { display:grid;grid-template-columns:repeat(4,1fr);gap:10px;background:var(--bg-3);border-radius:var(--r-lg);padding:12px; }
     .amg-item { display:flex;align-items:center;gap:6px;font-size:13px; }
     @media(max-width:600px){.appt-meta-grid{grid-template-columns:repeat(2,1fr);}}
+    .rate-stars-display { color:#f59e0b;font-size:15px;letter-spacing:1px;font-family:system-ui,sans-serif; }
+    .rate-star-row { display:flex;gap:6px; }
+    .rate-star-btn { font-size:28px;line-height:1;padding:4px 6px;border:none;background:transparent;cursor:pointer;color:var(--border-2);transition:color .15s,color .15s; }
+    .rate-star-btn.active { color:#f59e0b; }
+    .rate-star-btn:hover, .rate-star-btn:focus-visible { color:#fbbf24; outline:none; }
   `]
 })
 export class PatientAppointmentsComponent implements OnInit {
   all: any[] = []; filtered: any[] = []; loading = true; active = 'all';
   actionId = ''; cancelTarget: any = null; cancelReason = ''; cancelLoading = false;
+  reviewTarget: any = null; reviewStars = 0; reviewComment = ''; reviewSubmitting = false;
   nav = [{ label: 'Menu', items: [{ icon: '🏠', label: 'Dashboard', route: '/patient/dashboard' }, { icon: '🔍', label: 'Find Doctors', route: '/doctors' }, { icon: '📅', label: 'My Appointments', route: '/patient/appointments' }] }];
   filters = [
     { label: 'All', val: 'all' }, { label: '⏳ Pending', val: 'pending' },
@@ -155,5 +201,80 @@ export class PatientAppointmentsComponent implements OnInit {
   docInitials(fullName?: string): string {
     if (!fullName?.trim()) return 'DR';
     return fullName.split(/\s+/).map((x: string) => x[0]).join('').slice(0, 2).toUpperCase();
+  }
+
+  stars(r: number): string {
+    const n = Math.min(5, Math.max(0, Math.round(r || 0)));
+    return '★'.repeat(n) + '☆'.repeat(5 - n);
+  }
+
+  appointmentRated(a: any): boolean {
+    if (!a) return false;
+    if (a.hasReview === true) return true;
+    const rv = a.review?.rating ?? a.patientRating;
+    return rv != null && Number(rv) > 0;
+  }
+
+  appointmentCanRate(a: any): boolean {
+    return a?.status === 'completed' && !this.appointmentRated(a);
+  }
+
+  ratingValue(a: any): number {
+    const v = a?.review?.rating ?? a?.patientRating;
+    return v != null ? Number(v) : 0;
+  }
+
+  ratingComment(a: any): string {
+    const c = a?.review?.comment ?? a?.patientReview;
+    return typeof c === 'string' ? c.trim() : '';
+  }
+
+  openReview(a: any) {
+    this.reviewTarget = a;
+    this.reviewStars = 0;
+    this.reviewComment = '';
+  }
+
+  closeReview() {
+    if (this.reviewSubmitting) return;
+    this.reviewTarget = null;
+    this.reviewStars = 0;
+    this.reviewComment = '';
+  }
+
+  submitReview() {
+    if (!this.reviewTarget || this.reviewStars < 1) {
+      this.toast.error('Please choose a star rating from 1 to 5.');
+      return;
+    }
+    this.reviewSubmitting = true;
+    const id = this.reviewTarget._id;
+    const comment = this.reviewComment.trim();
+    this.as.submitAppointmentReview(id, { rating: this.reviewStars, comment: comment || undefined }).subscribe({
+      next: (r: any) => {
+        this.reviewSubmitting = false;
+        if (!r.success) {
+          this.toast.error(r.message || 'Could not submit your review.');
+          return;
+        }
+        const appt = r.data?.appointment;
+        const idx = this.all.findIndex((x: any) => x._id === id);
+        if (appt && idx !== -1) {
+          this.all[idx] = { ...this.all[idx], ...appt };
+        } else if (idx !== -1) {
+          this.all[idx].hasReview = true;
+          this.all[idx].review = { rating: this.reviewStars, ...(comment ? { comment } : {}) };
+          this.all[idx].patientRating = this.reviewStars;
+          if (comment) this.all[idx].patientReview = comment;
+        }
+        this.setFilter(this.active);
+        this.closeReview();
+        this.toast.success('Thank you for your feedback!');
+      },
+      error: () => {
+        this.reviewSubmitting = false;
+        this.toast.error('Could not submit your review. Please try again.');
+      }
+    });
   }
 }
