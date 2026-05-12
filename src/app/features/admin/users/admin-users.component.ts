@@ -53,7 +53,10 @@ import { environment } from '../../../../environments/environment';
                 <td><span class="badge" [class]="u.isVerified?'badge-completed':'badge-cancelled'">{{ u.isVerified?'Active':'Inactive' }}</span></td>
                 <td style="font-size:12px;color:var(--text-muted)">{{ u.createdAt | date:'MMM d, y' }}</td>
                 <td>
-                  <button class="btn btn-ghost btn-xs" (click)="toggle(u)">{{ u.isVerified?'Deactivate':'Activate' }}</button>
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+                    <button type="button" class="btn btn-ghost btn-xs" (click)="toggle(u)">{{ u.isVerified?'Deactivate':'Activate' }}</button>
+                    <button type="button" class="btn btn-danger btn-xs" (click)="deleteUser(u)">Delete</button>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -91,6 +94,23 @@ export class AdminUsersComponent implements OnInit {
   toggle(u: any) {
     this.http.patch<any>(`${environment.apiUrl}/admin/users/${u._id}/toggle-status`, {}).subscribe({
       next: (r: any) => { if (r.success) { u.isVerified = !u.isVerified; this.toast.success(`User ${u.isVerified ? 'activated' : 'deactivated'}.`); } }
+    });
+  }
+  deleteUser(u: any) {
+    if (!confirm(`Delete ${u.fullName} (${u.email})? This cannot be undone.`)) return;
+    this.http.delete<any>(`${environment.apiUrl}/users/${u._id}`).subscribe({
+      next: (r: any) => {
+        if (r.success) {
+          this.users = this.users.filter((x: any) => x._id !== u._id);
+          this.total = Math.max(0, this.total - 1);
+          this.toast.success('User deleted.');
+          if (!this.users.length && this.page > 1) {
+            this.page--;
+            this.load();
+          }
+        }
+      },
+      error: () => this.toast.error('Could not delete user.')
     });
   }
   go(p: number) { if (p >= 1 && p <= this.pages) { this.page = p; this.load(); } }
