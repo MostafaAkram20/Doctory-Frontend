@@ -3,6 +3,8 @@ import { authGuard, roleGuard, guestGuard } from './core/guards/auth.guard';
 export const routes: Routes = [
   { path:'', loadComponent:()=>import('./features/auth/landing/landing.component').then(m=>m.LandingComponent) },
   { path:'login', canActivate:[guestGuard], loadComponent:()=>import('./features/auth/login/login.component').then(m=>m.LoginComponent) },
+  { path:'forgot-password', canActivate:[guestGuard], loadComponent:()=>import('./features/auth/forgot-password/forgot-password.component').then(m=>m.ForgotPasswordComponent) },
+  { path:'reset-password', canActivate:[guestGuard], loadComponent:()=>import('./features/auth/reset-password/reset-password.component').then(m=>m.ResetPasswordComponent) },
   { path:'register', canActivate:[guestGuard], loadComponent:()=>import('./features/auth/register/register.component').then(m=>m.RegisterComponent) },
   { path:'doctor-register', canActivate:[guestGuard], loadComponent:()=>import('./features/auth/doctor-register/doctor-register.component').then(m=>m.DoctorRegisterComponent) },
   { path:'verify-otp', loadComponent:()=>import('./features/auth/verify-otp/verify-otp.component').then(m=>m.VerifyOtpComponent) },

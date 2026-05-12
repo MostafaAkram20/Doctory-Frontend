@@ -25,10 +25,11 @@ import { ToastService } from '../../../core/services/toast.service';
         <div class="verify-icon">📧</div>
       </div>
 
-      <h1 style="font-size:26px;margin-bottom:10px">Verify Your Email</h1>
+      <h1 style="font-size:26px;margin-bottom:10px">{{ isReset ? 'Verify it’s you' : 'Verify Your Email' }}</h1>
       <p style="color:var(--text-muted);font-size:14px;line-height:1.7;margin-bottom:32px">
-        We sent a 6-digit code to<br>
-        <strong style="color:var(--text)">{{ email }}</strong>
+        <ng-container *ngIf="isReset">Enter the code we sent to reset your password.<br></ng-container>
+        <ng-container *ngIf="!isReset">We sent a 6-digit code to<br></ng-container>
+        <strong style="color:var(--text)">{{ email || '—' }}</strong>
       </p>
 
       <div class="otp-row">
@@ -44,9 +45,9 @@ import { ToastService } from '../../../core/services/toast.service';
       <div class="error-box" *ngIf="err" style="text-align:left">{{ err }}</div>
       <div class="success-box" *ngIf="ok" style="text-align:left">{{ ok }}</div>
 
-      <button class="btn btn-brand btn-lg btn-block mt-16" (click)="verify()" [disabled]="loading || otp.length<6">
+      <button class="btn btn-brand btn-lg btn-block mt-16" (click)="verify()" [disabled]="loading || otp.length<6 || !email">
         <span class="spinner" style="width:18px;height:18px" *ngIf="loading"></span>
-        {{ loading ? 'Verifying…' : 'Verify Email' }}
+        {{ loading ? 'Verifying…' : (isReset ? 'Continue' : 'Verify Email') }}
       </button>
 
       <div class="resend-area">
@@ -76,13 +77,20 @@ import { ToastService } from '../../../core/services/toast.service';
   `]
 })
 export class VerifyOtpComponent implements OnInit, OnDestroy {
-  email = ''; type = 'patient'; otp = ''; loading = false; resending = false;
+  email = ''; type = 'patient'; intent = ''; otp = ''; loading = false; resending = false;
   err = ''; ok = ''; cooldown = 0;
+  get isReset() { return this.intent === 'reset'; }
   private timer: any;
 
   constructor(private route: ActivatedRoute, private router: Router, public auth: AuthService, public theme: ThemeService, private toast: ToastService) {}
 
-  ngOnInit() { this.route.queryParams.subscribe(p => { this.email = p['email']||''; this.type = p['type']||'patient'; }); }
+  ngOnInit() {
+    this.route.queryParams.subscribe(p => {
+      this.email = p['email'] || '';
+      this.type = p['type'] || 'patient';
+      this.intent = p['intent'] || '';
+    });
+  }
   ngOnDestroy() { clearInterval(this.timer); }
 
   onInput(e: any, i: number) { e.target.value = e.target.value.replace(/\D/g,'').slice(0,1); this.buildOtp(); if(e.target.value && i<5) (document.getElementById(`o${i+1}`) as HTMLInputElement)?.focus(); }
@@ -91,21 +99,62 @@ export class VerifyOtpComponent implements OnInit, OnDestroy {
   buildOtp() { this.otp = Array.from({length:6},(_,i)=>(document.getElementById(`o${i}`) as HTMLInputElement)?.value||'').join(''); }
 
   verify() {
-    if(this.otp.length<6) return;
-    this.loading=true; this.err=''; this.ok='';
-    const obs = this.type==='doctor' ? this.auth.verifyDoctorOTP(this.email,this.otp) : this.auth.verifyOTP(this.email,this.otp);
+    if (this.otp.length < 6 || !this.email) return;
+    this.loading = true; this.err = ''; this.ok = '';
+    if (this.isReset) {
+      const isDoctor = this.type === 'doctor';
+      this.auth.verifyPasswordResetOtp(this.email, this.otp, isDoctor).subscribe({
+        next: (r: any) => {
+          this.loading = false;
+          if (r.success) {
+            this.auth.setPasswordResetPending({ email: this.email, otp: this.otp, isDoctor });
+            this.toast.success('Code verified. Choose your new password.');
+            this.router.navigate(['/reset-password']);
+          } else {
+            this.err = r.message;
+          }
+        },
+        error: (e: any) => { this.loading = false; this.err = e.error?.message || 'Verification failed.'; }
+      });
+      return;
+    }
+    const obs = this.type === 'doctor' ? this.auth.verifyDoctorOTP(this.email, this.otp) : this.auth.verifyOTP(this.email, this.otp);
     obs.subscribe({
-      next:(r:any)=>{ this.loading=false; if(r.success){ this.ok='✅ Email verified! Redirecting to login…'; this.toast.success('Email verified!'); setTimeout(()=>this.router.navigate(['/login']),1800); }else{ this.err=r.message; } },
-      error:(e:any)=>{ this.loading=false; this.err=e.error?.message||'Verification failed.'; }
+      next: (r: any) => {
+        this.loading = false;
+        if (r.success) {
+          this.ok = '✅ Email verified! Redirecting to login…';
+          this.toast.success('Email verified!');
+          setTimeout(() => this.router.navigate(['/login']), 1800);
+        } else {
+          this.err = r.message;
+        }
+      },
+      error: (e: any) => { this.loading = false; this.err = e.error?.message || 'Verification failed.'; }
     });
   }
 
   resend() {
-    this.resending=true; this.err=''; this.ok='';
-    const obs = this.type==='doctor' ? this.auth.resendDoctorOTP(this.email) : this.auth.resendOTP(this.email);
+    if (!this.email) return;
+    this.resending = true; this.err = ''; this.ok = '';
+    const obs = this.isReset
+      ? this.auth.requestPasswordReset(this.email, this.type === 'doctor')
+      : (this.type === 'doctor' ? this.auth.resendDoctorOTP(this.email) : this.auth.resendOTP(this.email));
     obs.subscribe({
-      next:()=>{ this.resending=false; this.ok='New code sent to your email!'; this.cooldown=60; this.timer=setInterval(()=>{ this.cooldown--; if(this.cooldown<=0){clearInterval(this.timer);this.ok='';} },1000); },
-      error:(e:any)=>{ this.resending=false; this.err=e.error?.message||'Failed to resend.'; }
+      next: (r: any) => {
+        this.resending = false;
+        if (this.isReset && r && r.success === false) {
+          this.err = r.message || 'Failed to resend.';
+          return;
+        }
+        this.ok = 'New code sent to your email!';
+        this.cooldown = 60;
+        this.timer = setInterval(() => {
+          this.cooldown--;
+          if (this.cooldown <= 0) { clearInterval(this.timer); this.ok = ''; }
+        }, 1000);
+      },
+      error: (e: any) => { this.resending = false; this.err = e.error?.message || 'Failed to resend.'; }
     });
   }
 }

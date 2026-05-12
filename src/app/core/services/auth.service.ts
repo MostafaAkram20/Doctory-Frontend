@@ -19,8 +19,28 @@ export class AuthService {
   verifyDoctorOTP(email: string, otp: string): Observable<any> { return this.http.post<any>(`${this.api}/auth/doctor/verify-otp`, {email,otp}); }
   resendDoctorOTP(email: string): Observable<any> { return this.http.post<any>(`${this.api}/auth/doctor/resend-otp`, {email}); }
   loginDoctor(email: string, password: string): Observable<any> { return this.http.post<any>(`${this.api}/auth/doctor/login`, {email,password}).pipe(tap((r:any) => { if(r.success&&r.data.token) this.save(r.data.token, {...r.data.doctor, role:'doctor'}); })); }
+  /** Patient & admin accounts use `/auth/*`; doctors use `/auth/doctor/*`. */
+  requestPasswordReset(email: string, isDoctor: boolean): Observable<any> {
+    const url = isDoctor ? `${this.api}/auth/doctor/forgot-password` : `${this.api}/auth/forgot-password`;
+    return this.http.post<any>(url, { email });
+  }
+  verifyPasswordResetOtp(email: string, otp: string, isDoctor: boolean): Observable<any> {
+    const url = isDoctor ? `${this.api}/auth/doctor/verify-reset-otp` : `${this.api}/auth/verify-reset-otp`;
+    return this.http.post<any>(url, { email, otp });
+  }
+  completePasswordReset(email: string, otp: string, newPassword: string, isDoctor: boolean): Observable<any> {
+    const url = isDoctor ? `${this.api}/auth/doctor/reset-password` : `${this.api}/auth/reset-password`;
+    return this.http.post<any>(url, { email, otp, password: newPassword });
+  }
+  /** Holds OTP + email after reset OTP is verified until new password is saved. */
+  passwordResetPending: { email: string; otp: string; isDoctor: boolean } | null = null;
+  setPasswordResetPending(p: { email: string; otp: string; isDoctor: boolean }) { this.passwordResetPending = p; }
+  clearPasswordResetPending() { this.passwordResetPending = null; }
+  hasPasswordResetPending(): boolean {
+    return !!(this.passwordResetPending?.email && this.passwordResetPending?.otp);
+  }
   private save(token: string, user: any) { localStorage.setItem('token',token); localStorage.setItem('user',JSON.stringify(user)); this.currentUser.set(user); this.isLoggedIn.set(true); }
-  logout() { localStorage.clear(); this.currentUser.set(null); this.isLoggedIn.set(false); this.router.navigate(['/']); }
+  logout() { localStorage.clear(); this.currentUser.set(null); this.isLoggedIn.set(false); this.clearPasswordResetPending(); this.router.navigate(['/']); }
   getToken() { return localStorage.getItem('token'); }
   getRole() { return this.currentUser()?.role || ''; }
   isAdmin()   { return this.getRole()==='admin'; }

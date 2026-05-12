@@ -74,7 +74,10 @@ import { ToastService } from '../../../core/services/toast.service';
           </div>
 
           <div class="form-group">
-            <label>Password</label>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+              <label style="margin:0">Password</label>
+              <a routerLink="/forgot-password" [queryParams]="{ role: role }" style="font-size:13px;font-weight:600;color:var(--brand-1)">Forgot password?</a>
+            </div>
             <div class="input-icon-wrap">
               <span class="input-icon">🔒</span>
               <input class="form-control" [type]="showPass?'text':'password'" formControlName="password" placeholder="••••••••">
