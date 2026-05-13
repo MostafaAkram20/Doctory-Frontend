@@ -87,7 +87,7 @@ import { ToastService } from '../../../core/services/toast.service';
   </div>
   `,
   styles: [`
-    .pat-avatar { width:44px;height:44px;border-radius:50%;background:rgba(6,182,212,.1);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0; }
+    .pat-avatar { width:44px;height:44px; border-radius:50%;background:rgba(6,182,212,.1);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0; }
     .appt-meta-g { display:grid;grid-template-columns:repeat(4,1fr);gap:10px;background:var(--bg-3);border-radius:var(--r-lg);padding:12px;margin-top:4px; }
     .amg { display:flex;align-items:center;gap:6px;font-size:13px; }
     .notes-panel { background:var(--bg-3);border-radius:var(--r-lg);padding:16px;margin-top:12px; }
