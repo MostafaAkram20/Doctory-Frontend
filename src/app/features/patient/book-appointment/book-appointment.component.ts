@@ -221,6 +221,7 @@ export class BookAppointmentComponent implements OnInit {
     this.datesWithSlots = [];
     if (this.clinicId) this.loadClinicSchedule();
   }
+  
   onDateChange() {
     this.slot = null;
   }
