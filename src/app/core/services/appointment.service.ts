@@ -1,15 +1,38 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
+import { applyDoctorProfileImageAliases } from './doctor.service';
+
 @Injectable({ providedIn: 'root' })
 export class AppointmentService {
   private api = `${environment.apiUrl}/appointments`;
   constructor(private http: HttpClient) {}
+
+  private mapAppointmentsDoctorImages(r: any): any {
+    const list = r?.data?.appointments;
+    if (Array.isArray(list)) {
+      for (const a of list) {
+        if (a?.doctor) applyDoctorProfileImageAliases(a.doctor);
+      }
+    }
+    return r;
+  }
+
   bookAppointment(data:any): Observable<any> { return this.http.post<any>(this.api,data); }
-  getMyAppointments(f:any={}): Observable<any> { let p=new HttpParams(); Object.keys(f).forEach(k=>{if(f[k])p=p.set(k,String(f[k]));}); return this.http.get<any>(`${this.api}/my`,{params:p}); }
-  getDoctorAppointments(f:any={}): Observable<any> { let p=new HttpParams(); Object.keys(f).forEach(k=>{if(f[k])p=p.set(k,String(f[k]));}); return this.http.get<any>(`${this.api}/doctor`,{params:p}); }
-  getAllAppointments(f:any={}): Observable<any> { let p=new HttpParams(); Object.keys(f).forEach(k=>{if(f[k])p=p.set(k,String(f[k]));}); return this.http.get<any>(this.api,{params:p}); }
+  getMyAppointments(f:any={}): Observable<any> {
+    let p=new HttpParams(); Object.keys(f).forEach(k=>{if(f[k])p=p.set(k,String(f[k]));});
+    return this.http.get<any>(`${this.api}/my`,{params:p}).pipe(map((r:any)=>this.mapAppointmentsDoctorImages(r)));
+  }
+  getDoctorAppointments(f:any={}): Observable<any> {
+    let p=new HttpParams(); Object.keys(f).forEach(k=>{if(f[k])p=p.set(k,String(f[k]));});
+    return this.http.get<any>(`${this.api}/doctor`,{params:p}).pipe(map((r:any)=>this.mapAppointmentsDoctorImages(r)));
+  }
+  getAllAppointments(f:any={}): Observable<any> {
+    let p=new HttpParams(); Object.keys(f).forEach(k=>{if(f[k])p=p.set(k,String(f[k]));});
+    return this.http.get<any>(this.api,{params:p}).pipe(map((r:any)=>this.mapAppointmentsDoctorImages(r)));
+  }
   confirmAppointment(id:string): Observable<any> { return this.http.patch<any>(`${this.api}/${id}/confirm`,{}); }
   completeAppointment(id:string): Observable<any> { return this.http.patch<any>(`${this.api}/${id}/complete`,{}); }
   cancelAppointment(id:string,reason?:string): Observable<any> { return this.http.patch<any>(`${this.api}/${id}/cancel`,{cancellationReason:reason}); }
