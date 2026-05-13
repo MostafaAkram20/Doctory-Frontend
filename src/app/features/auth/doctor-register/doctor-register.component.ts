@@ -42,7 +42,7 @@ import { DoctorService } from '../../../core/services/doctor.service';
           <div class="form-row-2">
             <div class="form-group">
               <label>Full Name</label>
-              <input class="form-control" formControlName="fullName" placeholder="Dr. Mohamed Ali">
+              <input class="form-control" formControlName="fullName" placeholder="Mostafa Akram">
               <div class="error-msg" *ngIf="form.get('fullName')?.touched && form.get('fullName')?.invalid">Required</div>
             </div>
             <div class="form-group">
