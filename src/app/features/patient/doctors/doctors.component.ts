@@ -14,7 +14,7 @@ import { AuthService } from '../../../core/services/auth.service';
   <!-- NAV -->
   <nav class="pub-nav">
     <div class="container" style="display:flex;align-items:center;gap:40px;height:100%">
-      <a routerLink="/" class="nav-logo">Doct<span>ory</span></a>
+      <a routerLink="/" class="nav-logo"><span>Doctory</span></a>
       <div class="nav-links">
         <a routerLink="/">Home</a>
         <a routerLink="/doctors" class="active">Find Doctors</a>

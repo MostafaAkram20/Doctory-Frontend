@@ -14,7 +14,7 @@ import { ThemeService } from '../../../core/services/theme.service';
   template: `
   <nav class="pub-nav">
     <div class="container" style="display:flex;align-items:center;gap:32px;height:100%">
-      <a routerLink="/" class="nav-logo">Doct<span>ory</span></a>
+      <a routerLink="/" class="nav-logo">Doctory</a>
       <div class="nav-links"><a routerLink="/">Home</a><a routerLink="/doctors">Doctors</a></div>
       <div class="nav-right">
         <button class="theme-toggle" (click)="theme.toggle()">{{ theme.isDark()?'☀️':'🌙' }}</button>

@@ -15,7 +15,7 @@ import { ToastService } from '../../../core/services/toast.service';
     <!-- Left Panel -->
     <div class="auth-panel">
       <div class="auth-panel-inner">
-        <a routerLink="/" class="auth-logo">Doctory</a>
+        <a routerLink="/" class="auth-logo">Doct<span>ory</span></a>
         <div class="auth-visual-area">
           <div class="av-blob">🏥</div>
           <div class="av-stat av-stat-1">

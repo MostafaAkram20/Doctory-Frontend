@@ -13,9 +13,10 @@ export interface NavItem { icon: string; label: string; route: string; }
   template: `
     <aside class="sidebar">
       <div class="sb-logo">
-        <span style="background:var(--brand-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Doctory</span>
+        <a routerLink="/"  style="background:var(--brand-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text ">Doctory</a>
         <small>{{ roleLabel }}</small>
       </div>
+      <!-- <a routerLink="/" class="auth-logo">Doct<span>ory</span></a> -->
 
       <div class="sb-section" *ngFor="let section of sections">
         <div class="sb-label" *ngIf="section.label">{{ section.label }}</div>
