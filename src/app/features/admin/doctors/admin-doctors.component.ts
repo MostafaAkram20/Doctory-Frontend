@@ -111,6 +111,34 @@ import { ToastService } from '../../../core/services/toast.service';
             </select>
           </div>
         </div>
+        <div class="fee-panel">
+          <h4>Consultation fees (patient pricing)</h4>
+          <p class="fee-hint">Home and video fees are charged by the doctor. Clinic visit fees are set per clinic in Clinics management.</p>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Home visit — available</label>
+              <select class="form-control" formControlName="homeVisitAvailable">
+                <option [ngValue]="true">Yes</option><option [ngValue]="false">No</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Home visit fee (EGP)</label>
+              <input class="form-control" type="number" min="0" formControlName="homeVisitFees" placeholder="0">
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Video consultation — available</label>
+              <select class="form-control" formControlName="videoAvailable">
+                <option [ngValue]="true">Yes</option><option [ngValue]="false">No</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Video / voice fee (EGP)</label>
+              <input class="form-control" type="number" min="0" formControlName="videoFees" placeholder="0">
+            </div>
+          </div>
+        </div>
         <div style="display:flex;gap:10px;justify-content:flex-end">
           <button type="button" class="btn btn-ghost" (click)="editTarget=null">Cancel</button>
           <button type="submit" class="btn btn-brand" [disabled]="saving">{{ saving?'Saving…':'Save Changes' }}</button>
@@ -121,6 +149,9 @@ import { ToastService } from '../../../core/services/toast.service';
   `,
   styles: [`
     .filter-bar { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+    .fee-panel { margin-top:16px;padding:16px;border-radius:var(--r-xl);background:var(--bg-3); }
+    .fee-panel h4 { font-size:14px;margin:0 0 6px;font-weight:700;color:var(--text-2); }
+    .fee-hint { font-size:12px;color:var(--text-muted);margin:0 0 14px;line-height:1.45; }
   `]
 })
 export class AdminDoctorsComponent implements OnInit {
@@ -138,6 +169,10 @@ export class AdminDoctorsComponent implements OnInit {
       image_profile: ['', [Validators.pattern(/^(|https?:\/\/.+)$/i)]],
       isActive: [true],
       isVerified: [false],
+      homeVisitAvailable: [false],
+      homeVisitFees: [0, [Validators.min(0)]],
+      videoAvailable: [false],
+      videoFees: [0, [Validators.min(0)]],
     });
   }
 
@@ -160,6 +195,10 @@ export class AdminDoctorsComponent implements OnInit {
       image_profile: d.image_profile || '',
       isActive: d.isActive,
       isVerified: d.isVerified,
+      homeVisitAvailable: !!d.homeVisit?.available,
+      homeVisitFees: d.homeVisit?.fees ?? 0,
+      videoAvailable: !!d.video_consulation?.available,
+      videoFees: d.video_consulation?.fees ?? 0,
     });
   }
   save() {
@@ -169,9 +208,30 @@ export class AdminDoctorsComponent implements OnInit {
       return;
     }
     this.saving = true;
-    this.ds.updateDoctor(this.editTarget._id, this.editForm.value).subscribe({
-      next: (r: any) => { this.saving = false; if (r.success) { Object.assign(this.editTarget, this.editForm.value); this.editTarget = null; this.toast.success('Doctor updated!'); } },
-      error: () => this.saving = false
+    const v = this.editForm.value;
+    const prevH = this.editTarget.homeVisit || { areas: [] };
+    const prevV = this.editTarget.video_consulation || {};
+    const payload = {
+      specialty: v.specialty,
+      experience: v.experience,
+      title: v.title,
+      bio: v.bio,
+      image_profile: v.image_profile,
+      isActive: v.isActive,
+      isVerified: v.isVerified,
+      homeVisit: { ...prevH, available: v.homeVisitAvailable, fees: Number(v.homeVisitFees) || 0 },
+      video_consulation: { ...prevV, available: v.videoAvailable, fees: Number(v.videoFees) || 0 },
+    };
+    this.ds.updateDoctor(this.editTarget._id, payload).subscribe({
+      next: (r: any) => {
+        this.saving = false;
+        if (r.success) {
+          Object.assign(this.editTarget, payload);
+          this.editTarget = null;
+          this.toast.success('Doctor updated!');
+        }
+      },
+      error: () => (this.saving = false)
     });
   }
   del(d: any) {

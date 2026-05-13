@@ -65,20 +65,33 @@ import { ToastService } from '../../../core/services/toast.service';
                 <label>Select Clinic</label>
                 <select class="form-control" [(ngModel)]="clinicId" (ngModelChange)="onClinicChange()">
                   <option value="">Choose a clinic</option>
-                  <option *ngFor="let c of doc.clinic" [value]="c._id">{{ c.name }} — {{ c.address?.city }}</option>
+                  <option *ngFor="let c of doc.clinic" [value]="c._id">{{ c.name }} — {{ c.address?.city }} · {{ c.feveseta }} EGP</option>
                 </select>
               </div>
-              <div class="form-group">
+              <ng-container *ngIf="apptType==='clinic' && clinicId">
+                <label style="font-size:13px;font-weight:600;display:block;margin-bottom:10px">Days with open slots</label>
+                <p style="font-size:12px;color:var(--text-muted);margin:0 0 14px">Pick a day, then choose a time. Only dates that still have free slots are listed.</p>
+                <div *ngIf="slotsLoading" style="text-align:center;padding:24px"><div class="spinner" style="margin:0 auto;width:32px;height:32px"></div></div>
+                <div class="date-chip-row" *ngIf="!slotsLoading && datesWithSlots.length">
+                  <button type="button" *ngFor="let d of datesWithSlots" class="date-chip" [class.selected]="date===d" (click)="pickClinicDate(d)">
+                    <span class="dc-dow">{{ d | date:'EEE' }}</span>
+                    <span class="dc-day">{{ d | date:'MMM d' }}</span>
+                  </button>
+                </div>
+                <div class="empty-state" style="padding:28px" *ngIf="!slotsLoading && !datesWithSlots.length">
+                  <div class="es-icon" style="font-size:32px">📅</div><p>No upcoming slots at this clinic yet. Try another location or check back later.</p>
+                </div>
+                <div *ngIf="!slotsLoading && date && slots.length" style="margin-top:20px">
+                  <label style="font-size:13px;font-weight:600;display:block;margin-bottom:12px">Times on {{ date | date:'EEEE, MMMM d' }}</label>
+                  <div class="slot-grid">
+                    <button type="button" *ngFor="let s of slots" class="slot-pill" [class.selected]="slot?._id===s._id" [disabled]="s.isBooked" (click)="slot=s;time=s.startTime">{{ s.startTime }}</button>
+                  </div>
+                </div>
+                <div class="empty-state" style="padding:20px" *ngIf="!slotsLoading && date && !slots.length"><p style="margin:0;font-size:14px;color:var(--text-muted)">No times left on this day.</p></div>
+              </ng-container>
+              <div class="form-group" *ngIf="apptType!=='clinic'">
                 <label>Select Date</label>
                 <input class="form-control" type="date" [(ngModel)]="date" [min]="minDate" (ngModelChange)="onDateChange()">
-              </div>
-              <div *ngIf="apptType==='clinic' && clinicId && date">
-                <label style="font-size:13px;font-weight:600;display:block;margin-bottom:12px">Available Time Slots</label>
-                <div *ngIf="slotsLoading" style="text-align:center;padding:20px"><div class="spinner" style="margin:0 auto;width:32px;height:32px"></div></div>
-                <div class="slot-grid" *ngIf="!slotsLoading && slots.length">
-                  <button *ngFor="let s of slots" class="slot-pill" [class.selected]="slot?._id===s._id" [disabled]="s.isBooked" (click)="slot=s;time=s.startTime">{{ s.startTime }}</button>
-                </div>
-                <div class="empty-state" style="padding:28px" *ngIf="!slotsLoading && !slots.length"><div class="es-icon" style="font-size:32px">📅</div><p>No slots available for this date</p></div>
               </div>
               <div class="form-group mt-16" *ngIf="apptType!=='clinic'">
                 <label>Preferred Time</label>
@@ -172,12 +185,22 @@ import { ToastService } from '../../../core/services/toast.service';
     .doc-summary { padding:24px;position:sticky;top:80px;height:fit-content; }
     .ds-img { width:80px;height:80px;border-radius:50%;overflow:hidden;margin:0 auto 14px;background:rgba(124,58,237,.1);display:flex;align-items:center;justify-content:center; }
     .ds-ava { font-family:'Bricolage Grotesque',sans-serif;font-size:24px;font-weight:800;color:var(--brand-1); }
+    .date-chip-row { display:flex;flex-wrap:wrap;gap:10px; }
+    .date-chip { display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 14px;border-radius:var(--r-lg);border:2px solid var(--border-2);background:var(--bg-2);cursor:pointer;font:inherit;transition:background .15s,border-color .15s; }
+    .date-chip:hover { border-color:var(--brand-1);background:rgba(124,58,237,.06); }
+    .date-chip.selected { border-color:var(--brand-1);background:rgba(124,58,237,.12);box-shadow:0 0 0 1px var(--brand-1); }
+    .dc-dow { font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em; }
+    .dc-day { font-size:14px;font-weight:800;color:var(--text-1); }
     @media(max-width:900px){.book-layout{grid-template-columns:1fr;}.doc-summary{display:none;}}
   `]
 })
 export class BookAppointmentComponent implements OnInit {
   doc: any = null; step = 1; apptType = ''; clinicId = ''; date = ''; time = '';
   slot: any = null; slots: any[] = []; slotsLoading = false;
+  /** All bookable clinic slots for selected clinic (across dates). */
+  clinicSlotsAll: any[] = [];
+  /** ISO date strings (YYYY-MM-DD) that have at least one free slot. */
+  datesWithSlots: string[] = [];
   reason = ''; sympInput = ''; loading = false; err = '';
   minDate = new Date().toISOString().split('T')[0];
   nav = [{ items: [{ icon:'🏠', label:'Dashboard', route:'/patient/dashboard' }, { icon:'🔍', label:'Find Doctors', route:'/doctors' }, { icon:'📅', label:'My Appointments', route:'/patient/appointments' }] }];
@@ -189,11 +212,66 @@ export class BookAppointmentComponent implements OnInit {
     this.ds.getDoctorById(id).subscribe({ next: (r: any) => { if (r.success) this.doc = r.data.doctor; } });
   }
 
-  onClinicChange() { this.slots = []; this.slot = null; if (this.date) this.loadSlots(); }
-  onDateChange() { this.slot = null; if (this.apptType === 'clinic' && this.clinicId) this.loadSlots(); }
-  loadSlots() {
+  onClinicChange() {
+    this.slots = [];
+    this.slot = null;
+    this.time = '';
+    this.date = '';
+    this.clinicSlotsAll = [];
+    this.datesWithSlots = [];
+    if (this.clinicId) this.loadClinicSchedule();
+  }
+  onDateChange() {
+    this.slot = null;
+  }
+  private slotIsBookable(s: any): boolean {
+    return !!(s && s.isAvailable && !s.isBooked && s.date && String(s.date) >= this.minDate);
+  }
+  private mergeSlotsFromDoctorClinic(apiSlots: any[]): any[] {
+    if (apiSlots.length) return apiSlots;
+    const c = this.doc?.clinic?.find((x: any) => x._id === this.clinicId);
+    const emb = c?.schedule_clinic;
+    return Array.isArray(emb) ? [...emb] : [];
+  }
+  loadClinicSchedule() {
     this.slotsLoading = true;
-    this.cs.getScheduleSlots(this.clinicId, this.date).subscribe({ next: (r: any) => { this.slotsLoading = false; if (r.success) this.slots = r.data.slots.filter((s: any) => s.isAvailable && !s.isBooked); }, error: () => this.slotsLoading = false });
+    this.cs.getScheduleSlots(this.clinicId).subscribe({
+      next: (r: any) => {
+        this.slotsLoading = false;
+        let raw: any[] = [];
+        if (r?.success) raw = r.data?.slots || r.data?.schedule || [];
+        raw = this.mergeSlotsFromDoctorClinic(raw);
+        this.applyClinicSlotData(raw);
+      },
+      error: () => {
+        this.slotsLoading = false;
+        const raw = this.mergeSlotsFromDoctorClinic([]);
+        this.applyClinicSlotData(raw);
+      }
+    });
+  }
+  private applyClinicSlotData(raw: any[]) {
+    const list = raw.filter((s: any) => this.slotIsBookable(s));
+    this.clinicSlotsAll = list;
+    const set = new Set<string>();
+    list.forEach((s: any) => {
+      if (s.date) set.add(String(s.date).slice(0, 10));
+    });
+    this.datesWithSlots = Array.from(set).sort();
+    if (this.date && !this.datesWithSlots.includes(this.date)) {
+      this.date = '';
+      this.slots = [];
+      this.slot = null;
+      this.time = '';
+    }
+    if (this.date) this.slots = list.filter((s: any) => String(s.date).slice(0, 10) === this.date);
+    else this.slots = [];
+  }
+  pickClinicDate(d: string) {
+    this.date = d;
+    this.slot = null;
+    this.time = '';
+    this.slots = this.clinicSlotsAll.filter((s: any) => String(s.date).slice(0, 10) === d);
   }
   canStep2() { if (!this.date) return false; if (this.apptType === 'clinic') return !!(this.clinicId && this.slot); return !!this.time; }
   clinicName() { return this.doc?.clinic?.find((c: any) => c._id === this.clinicId)?.name || ''; }

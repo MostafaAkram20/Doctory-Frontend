@@ -45,7 +45,7 @@ import { ToastService } from '../../../core/services/toast.service';
             </div>
 
             <div class="cc-meta">
-              <div class="cc-meta-item"><span>💰</span><span>{{ c.feveseta }} EGP / visit</span></div>
+              <div class="cc-meta-item"><span>💰</span><span>{{ c.feveseta }} EGP clinic consultation</span></div>
               <div class="cc-meta-item" *ngIf="c.phone"><span>📞</span><span>{{ c.phone }}</span></div>
               <div class="cc-meta-item"><span>👨‍⚕️</span><span>{{ c.Doctor?.length || 0 }} doctors</span></div>
               <div class="cc-meta-item"><span>📅</span><span>{{ c.schedule_clinic?.length || 0 }} slots</span></div>
@@ -123,8 +123,8 @@ import { ToastService } from '../../../core/services/toast.service';
           </div>
         </div>
         <div class="form-group">
-          <label>Consultation Fee (EGP) *</label>
-          <input class="form-control" type="number" formControlName="feveseta" placeholder="300">
+          <label>Clinic consultation fee per visit (EGP) *</label>
+          <input class="form-control" type="number" formControlName="feveseta" min="0" placeholder="300">
           <div class="error-msg" *ngIf="form.get('feveseta')?.touched && form.get('feveseta')?.invalid">Required</div>
         </div>
         <div class="error-box" *ngIf="formErr">{{ formErr }}</div>
