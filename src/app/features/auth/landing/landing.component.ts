@@ -13,7 +13,7 @@ import { AuthService } from '../../../core/services/auth.service';
   <!-- NAV -->
   <nav class="pub-nav">
     <div class="container" style="display:flex;align-items:center;gap:40px;height:100%">
-      <div class="nav-logo">Doctory</div>
+      <a routerLink="/"><div class="nav-logo"><span>Doctory</span></div></a>
       <div class="nav-links">
         <a routerLink="/" class="active">Home</a>
         <a routerLink="/doctors">Find Doctors</a>
@@ -134,7 +134,7 @@ import { AuthService } from '../../../core/services/auth.service';
     <div class="container">
       <div style="text-align:center;margin-bottom:52px">
         <div class="section-eyebrow">Simple Process</div>
-        <h2 style="font-size:clamp(28px,4vw,42px);margin-bottom:12px">How <span class="text-gradient">Doctory</span> Works</h2>
+        <h2 style="font-size:clamp(28px,4vw,42px);margin-bottom:12px">Steps For How <span class="text-gradient">Doctory</span> Works</h2>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px">
         <div class="how-card card" *ngFor="let s of steps; let i = index" [style.animation-delay]="i*0.1+'s'">
