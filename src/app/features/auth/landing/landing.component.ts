@@ -10,6 +10,7 @@ import { AuthService } from '../../../core/services/auth.service';
   standalone: true,
   imports: [RouterLink, CommonModule],
   template: `
+  <div class="landing-page">
   <!-- NAV -->
   <nav class="pub-nav">
     <div class="container" style="display:flex;align-items:center;gap:40px;height:100%">
@@ -48,6 +49,31 @@ import { AuthService } from '../../../core/services/auth.service';
 
   <!-- HERO -->
   <section class="hero">
+    <div class="med-bg" aria-hidden="true">
+      <svg class="dna dna-left" viewBox="0 0 80 720" preserveAspectRatio="xMidYMin slice">
+        <path class="strand strand-a" [attr.d]="dna.p1" />
+        <path class="strand strand-b" [attr.d]="dna.p2" />
+        <line *ngFor="let r of dna.rungs" class="rung" [attr.x1]="r.x1" [attr.x2]="r.x2" [attr.y1]="r.y" [attr.y2]="r.y" />
+      </svg>
+      <svg class="dna dna-right" viewBox="0 0 80 720" preserveAspectRatio="xMidYMin slice">
+        <path class="strand strand-a" [attr.d]="dna.p1" />
+        <path class="strand strand-b" [attr.d]="dna.p2" />
+        <line *ngFor="let r of dna.rungs" class="rung" [attr.x1]="r.x1" [attr.x2]="r.x2" [attr.y1]="r.y" [attr.y2]="r.y" />
+      </svg>
+      <svg class="ecg" viewBox="0 0 1200 80" preserveAspectRatio="none">
+        <path class="ecg-line" d="M0 40 H80 L95 40 L110 8 L125 72 L140 40 H220 L235 40 L250 18 L260 40 H360 L375 40 L390 10 L405 70 L420 40 H520 L535 40 L550 16 L565 40 H680 L695 40 L710 6 L725 74 L740 40 H860 L875 40 L890 20 L905 40 H1020 L1035 40 L1050 12 L1065 68 L1080 40 H1200" />
+      </svg>
+      <svg class="ecg ecg-2" viewBox="0 0 1200 80" preserveAspectRatio="none">
+        <path class="ecg-line" d="M0 40 H80 L95 40 L110 8 L125 72 L140 40 H220 L235 40 L250 18 L260 40 H360 L375 40 L390 10 L405 70 L420 40 H520 L535 40 L550 16 L565 40 H680 L695 40 L710 6 L725 74 L740 40 H860 L875 40 L890 20 L905 40 H1020 L1035 40 L1050 12 L1065 68 L1080 40 H1200" />
+      </svg>
+      <span class="med-cross c1"></span>
+      <span class="med-cross c2"></span>
+      <span class="med-cross c3"></span>
+      <span class="med-cross c4"></span>
+      <span class="molecule m1"></span>
+      <span class="molecule m2"></span>
+      <span class="molecule m3"></span>
+    </div>
     <div class="hero-noise"></div>
     <div class="hero-orb hero-orb-1"></div>
     <div class="hero-orb hero-orb-2"></div>
@@ -78,13 +104,13 @@ import { AuthService } from '../../../core/services/auth.service';
 
         <!-- Visual -->
         <div class="hero-visual">
-          <div class="hero-blob">🏥</div>
+          <div class=""><img style="border-radius: 10px;" src="https://img.magnific.com/free-photo/cheerful-male-doctor-white-gown-portrait_53876-105121.jpg" alt=""></div>
 
           <div class="hero-float-card hero-float-card-1">
             <div style="width:40px;height:40px;border-radius:12px;background:var(--brand-gradient);display:flex;align-items:center;justify-content:center;font-size:18px">👨‍⚕️</div>
             <div>
               <strong style="font-size:13px;display:block">Dr. Ahmed Hassan</strong>
-              <span style="font-size:11px;color:var(--text-muted)">Cardiologist • ⭐ 4.9</span>
+              <span style="font-size:11px;color:var(--text-muted)">Nephrologist • ⭐ 4.9</span>
             </div>
           </div>
 
@@ -238,8 +264,75 @@ import { AuthService } from '../../../core/services/auth.service';
       </div>
     </div>
   </footer>
+  </div>
   `,
   styles: [`
+    .landing-page { position:relative; }
+    .med-bg {
+      position:absolute; inset:0; z-index:0; pointer-events:none; overflow:hidden;
+      opacity:.38;
+    }
+    .hero .container { position:relative; z-index:1; }
+    :host-context([data-theme="dark"]) .med-bg { opacity:.34; }
+    .dna { position:absolute; top:-8%; height:120%; width:110px; }
+    .dna-left { left:-8px; animation: dnaDrift 28s ease-in-out infinite; }
+    .dna-right { right:-12px; animation: dnaDriftRight 34s ease-in-out infinite; }
+    .strand { fill:none; stroke-width:2.2; stroke-linecap:round; }
+    .strand-a { stroke:#7c3aed; }
+    .strand-b { stroke:#06b6d4; }
+    .rung { stroke:#7c3aed; stroke-width:1.4; opacity:.55; }
+    .ecg {
+      position:absolute; left:-10%; width:120%; height:90px; opacity:.7;
+      animation: ecgSlide 18s linear infinite;
+    }
+    .ecg { bottom:14%; }
+    .ecg-2 { top:22%; opacity:.35; animation-duration:26s; animation-direction:reverse; }
+    .ecg-line {
+      fill:none; stroke:#06b6d4; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round;
+      stroke-dasharray:80 420; animation: ecgPulse 2.4s ease-in-out infinite;
+    }
+    .med-cross {
+      position:absolute; width:18px; height:18px; opacity:.55;
+      background:linear-gradient(#7c3aed,#06b6d4);
+      clip-path: polygon(35% 0, 65% 0, 65% 35%, 100% 35%, 100% 65%, 65% 65%, 65% 100%, 35% 100%, 35% 65%, 0 65%, 0 35%, 35% 35%);
+      animation: floatSoft 9s ease-in-out infinite;
+    }
+    .c1 { top:18%; left:12%; animation-delay:0s; }
+    .c2 { top:62%; left:22%; width:12px; height:12px; animation-delay:1.4s; }
+    .c3 { top:28%; right:18%; animation-delay:2.2s; }
+    .c4 { top:72%; right:26%; width:14px; height:14px; animation-delay:3s; }
+    .molecule {
+      position:absolute; width:10px; height:10px; border-radius:50%;
+      background:rgba(6,182,212,.55); box-shadow:0 0 0 6px rgba(6,182,212,.12);
+      animation: floatSoft 11s ease-in-out infinite;
+    }
+    .m1 { top:40%; left:8%; animation-delay:.6s; }
+    .m2 { top:52%; right:10%; background:rgba(124,58,237,.5); box-shadow:0 0 0 7px rgba(124,58,237,.12); animation-delay:1.8s; }
+    .m3 { top:16%; right:36%; width:7px; height:7px; animation-delay:2.8s; }
+    @keyframes dnaDrift {
+      0% { transform:translateY(0) rotate(-8deg); }
+      50% { transform:translateY(-36px) rotate(-6deg); }
+      100% { transform:translateY(0) rotate(-8deg); }
+    }
+    @keyframes dnaDriftRight {
+      0% { transform:translateY(0) rotate(8deg) scaleX(-1); }
+      50% { transform:translateY(40px) rotate(6deg) scaleX(-1); }
+      100% { transform:translateY(0) rotate(8deg) scaleX(-1); }
+    }
+    @keyframes ecgSlide { 0% { transform:translateX(0); } 100% { transform:translateX(-8%); } }
+    @keyframes ecgPulse { 0%,100% { stroke-dashoffset:0; opacity:.45; } 50% { stroke-dashoffset:-120; opacity:.9; } }
+    @keyframes floatSoft {
+      0%,100% { transform:translateY(0) rotate(0deg); }
+      50% { transform:translateY(-18px) rotate(12deg); }
+    }
+    @media (max-width:768px) {
+      .dna { width:72px; opacity:.85; }
+      .ecg-2 { display:none; }
+      .med-bg { opacity:.16; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .med-bg * { animation:none !important; }
+    }
     .section-eyebrow { display:inline-block;background:rgba(124,58,237,.12);color:var(--brand-1);font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;padding:4px 12px;border-radius:20px;margin-bottom:12px; }
     .spec-card { display:flex;flex-direction:column;align-items:center;gap:8px;padding:24px 16px;text-align:center;cursor:pointer; .spec-icon{font-size:36px;margin-bottom:4px;} strong{font-size:13px;} }
     .how-card { padding:28px;text-align:center; .how-num{font-family:'Bricolage Grotesque',sans-serif;font-size:11px;font-weight:800;color:var(--brand-1);letter-spacing:1px;margin-bottom:12px;} .how-icon{font-size:36px;margin-bottom:14px;} h3{font-size:16px;margin-bottom:8px;} p{font-size:13px;color:var(--text-muted);line-height:1.65;} }
@@ -254,6 +347,7 @@ import { AuthService } from '../../../core/services/auth.service';
   `]
 })
 export class LandingComponent implements OnInit {
+  dna = LandingComponent.buildDna();
   doctors: any[] = [];
   specialties = [
     { name:'Cardiology',   icon:'❤️',  count:48 },
@@ -269,6 +363,25 @@ export class LandingComponent implements OnInit {
     { icon:'🩺', title:'Get Treated',   desc:'Visit in-person, at home, or via video call.' },
   ];
   constructor(public theme: ThemeService, private ds: DoctorService, public auth: AuthService) {}
+  private static buildDna() {
+    const height = 720;
+    const steps = 48;
+    const amp = 28;
+    const cx = 40;
+    let p1 = '';
+    let p2 = '';
+    const rungs: { x1: number; x2: number; y: number }[] = [];
+    for (let i = 0; i <= steps; i++) {
+      const y = (i / steps) * height;
+      const a = (i / steps) * Math.PI * 8;
+      const x1 = cx + Math.sin(a) * amp;
+      const x2 = cx - Math.sin(a) * amp;
+      p1 += i === 0 ? `M ${x1.toFixed(1)} ${y.toFixed(1)}` : ` L ${x1.toFixed(1)} ${y.toFixed(1)}`;
+      p2 += i === 0 ? `M ${x2.toFixed(1)} ${y.toFixed(1)}` : ` L ${x2.toFixed(1)} ${y.toFixed(1)}`;
+      if (i % 2 === 0) rungs.push({ x1: +x1.toFixed(1), x2: +x2.toFixed(1), y: +y.toFixed(1) });
+    }
+    return { p1, p2, rungs };
+  }
   ngOnInit() { this.ds.getDoctors({ limit: 4 }).subscribe({ next: (r: any) => { if (r.success) this.doctors = r.data.doctors; } }); }
   stars(r: number) { return '★'.repeat(Math.round(r)) + '☆'.repeat(5 - Math.round(r)); }
   initials(n: string) { return n.split(' ').map((x: string) => x[0]).join('').slice(0, 2).toUpperCase(); }

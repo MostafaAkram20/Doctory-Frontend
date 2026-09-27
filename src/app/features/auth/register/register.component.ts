@@ -51,8 +51,8 @@ import { ToastService } from '../../../core/services/toast.service';
         <form [formGroup]="f1" *ngIf="step===1">
           <div class="form-group">
             <label>Full Name</label>
-            <div class="input-icon-wrap"><span class="input-icon">👤</span>
-              <input class="form-control" formControlName="fullName" placeholder="Ahmed Hassan">
+            <div class="input-icon-wrap"><span class="input-icon" >👤</span>
+              <input class="form-control" formControlName="fullName" placeholder="Mostafa Akram">
             </div>
             <div class="error-msg" *ngIf="f1.get('fullName')?.touched && f1.get('fullName')?.invalid">Min 2 characters required</div>
           </div>
