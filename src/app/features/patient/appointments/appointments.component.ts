@@ -6,24 +6,26 @@ import { AppointmentService } from '../../../core/services/appointment.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { SidebarComponent } from '../../../shared/components/sidebar/sidebar.component';
 import { ToastService } from '../../../core/services/toast.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { LanguageService } from '../../../core/i18n/language.service';
 
 @Component({
   selector: 'app-patient-appointments',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, SidebarComponent],
+  imports: [CommonModule, RouterLink, FormsModule, SidebarComponent, TranslatePipe],
   template: `
   <div class="app-shell">
     <app-sidebar [sections]="nav"></app-sidebar>
     <div class="main-wrap">
       <div class="topbar">
-        <h2>My Appointments</h2>
-        <a routerLink="/doctors" class="btn btn-brand btn-sm">+ New Appointment</a>
+        <h2>{{ 'appt.mine' | t }}</h2>
+        <a routerLink="/doctors" class="btn btn-brand btn-sm">{{ 'appt.new' | t }}</a>
       </div>
       <div class="page-body">
         <!-- Filter tabs -->
         <div class="filter-bar">
           <button *ngFor="let f of filters" class="filter-pill" [class.active]="active===f.val" (click)="setFilter(f.val)">
-            {{ f.label }}
+            {{ f.label | t }}
             <span *ngIf="count(f.val)" style="background:rgba(255,255,255,.25);padding:1px 6px;border-radius:10px;font-size:10px;margin-left:4px">{{ count(f.val) }}</span>
           </button>
         </div>
@@ -49,26 +51,26 @@ import { ToastService } from '../../../core/services/toast.service';
                   <span style="font-size:12px;color:var(--brand-1);font-weight:600">{{ a.doctor?.specialty }}</span>
                 </div>
               </div>
-              <span class="badge badge-{{ a.status }}">{{ a.status }}</span>
+              <span class="badge badge-{{ a.status }}">{{ ('status.' + a.status) | t }}</span>
             </div>
             <div class="appt-meta-grid">
               <div class="amg-item"><span>📅</span><span>{{ a.date | date:'EEE, MMM d, y' }}</span></div>
               <div class="amg-item"><span>🕐</span><span>{{ a.Time }}</span></div>
-              <div class="amg-item"><span>🏥</span><span style="text-transform:capitalize">{{ a.appointmentType.replace('_',' ') }}</span></div>
-              <div class="amg-item"><span>💰</span><span>{{ a.finalFees }} EGP</span></div>
+              <div class="amg-item"><span>🏥</span><span style="text-transform:capitalize">{{ lang.apptType(a.appointmentType) }}</span></div>
+              <div class="amg-item"><span>💰</span><span>{{ a.finalFees }} {{ 'common.egp' | t }}</span></div>
             </div>
             <div *ngIf="a.reasonForVisit" style="font-size:13px;color:var(--text-muted);margin-top:10px">
-              <strong>Reason:</strong> {{ a.reasonForVisit }}
+              <strong>{{ 'appt.reason' | t }}</strong> {{ a.reasonForVisit }}
             </div>
             <div *ngIf="a.prescription" style="background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.15);border-radius:var(--r);padding:12px;margin-top:10px">
-              <div style="font-size:12px;font-weight:700;color:var(--success);margin-bottom:4px">📋 Prescription</div>
+              <div style="font-size:12px;font-weight:700;color:var(--success);margin-bottom:4px">{{ 'appt.prescription' | t }}</div>
               <p style="font-size:13px;color:var(--text-muted)">{{ a.prescription }}</p>
             </div>
             <div *ngIf="a.symptoms?.length" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px">
               <span *ngFor="let s of a.symptoms" class="tag">{{ s }}</span>
             </div>
             <div *ngIf="a.status === 'completed' && appointmentRated(a)" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border-2)">
-              <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px">Your rating</div>
+              <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px">{{ 'appt.yourRating' | t }}</div>
               <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
                 <span class="rate-stars-display" [attr.aria-label]="'Rated ' + ratingValue(a) + ' out of 5'">{{ stars(ratingValue(a)) }}</span>
                 <strong style="font-size:14px">{{ ratingValue(a) }}/5</strong>
@@ -76,19 +78,20 @@ import { ToastService } from '../../../core/services/toast.service';
               <p *ngIf="ratingComment(a)" style="font-size:13px;color:var(--text-muted);margin-top:10px;line-height:1.5">{{ ratingComment(a) }}</p>
             </div>
             <div *ngIf="appointmentCanRate(a)" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border-2);display:flex;justify-content:flex-end">
-              <button type="button" class="btn btn-brand btn-sm" (click)="openReview(a)">⭐ Rate this visit</button>
+              <button type="button" class="btn btn-brand btn-sm" (click)="openReview(a)">{{ 'appt.rateVisit' | t }}</button>
             </div>
             <div *ngIf="['pending','confirmed'].includes(a.status)" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border-2);display:flex;justify-content:flex-end;gap:8px">
-              <button class="btn btn-danger btn-sm" (click)="openCancel(a)" [disabled]="actionId===a._id">Cancel Appointment</button>
+              <button class="btn btn-danger btn-sm" (click)="openCancel(a)" [disabled]="actionId===a._id">{{ 'appt.cancelAppt' | t }}</button>
             </div>
           </div>
         </div>
 
         <div class="empty-state" *ngIf="!loading && !filtered.length">
           <div class="es-icon">📅</div>
-          <h3>No {{ active === 'all' ? '' : active }} appointments</h3>
-          <p>{{ active === 'all' ? 'You have not booked any appointments yet.' : 'Nothing here yet.' }}</p>
-          <a routerLink="/doctors" class="btn btn-brand mt-16">Book an Appointment</a>
+          <h3 *ngIf="active === 'all'">{{ 'appt.noneAll' | t }}</h3>
+          <h3 *ngIf="active !== 'all'">{{ 'appt.none' | t:{status: lang.status(active)} }}</h3>
+          <p>{{ (active === 'all' ? 'appt.noneAllSub' : 'appt.noneSub') | t }}</p>
+          <a routerLink="/doctors" class="btn btn-brand mt-16">{{ 'appt.book' | t }}</a>
         </div>
       </div>
     </div>
@@ -98,18 +101,18 @@ import { ToastService } from '../../../core/services/toast.service';
   <div class="overlay" *ngIf="cancelTarget" (click)="cancelTarget=null">
     <div class="modal" (click)="$event.stopPropagation()">
       <div class="modal-head">
-        <h3>Cancel Appointment</h3>
+        <h3>{{ 'appt.cancelAppt' | t }}</h3>
         <button class="close" (click)="cancelTarget=null">×</button>
       </div>
-      <p style="font-size:14px;color:var(--text-muted);margin-bottom:16px">Are you sure you want to cancel this appointment with <strong>{{ cancelTarget?.doctor?.fullName }}</strong>?</p>
+      <p style="font-size:14px;color:var(--text-muted);margin-bottom:16px">{{ 'appt.cancelAsk' | t }} <strong>{{ cancelTarget?.doctor?.fullName }}</strong>?</p>
       <div class="form-group">
-        <label>Reason (optional)</label>
-        <textarea class="form-control" rows="3" [(ngModel)]="cancelReason" placeholder="Let us know why you're cancelling…"></textarea>
+        <label>{{ 'appt.cancelReason' | t }}</label>
+        <textarea class="form-control" rows="3" [(ngModel)]="cancelReason" [placeholder]="'appt.cancelPh' | t"></textarea>
       </div>
       <div style="display:flex;gap:10px;justify-content:flex-end">
-        <button class="btn btn-ghost" (click)="cancelTarget=null">Keep It</button>
+        <button class="btn btn-ghost" (click)="cancelTarget=null">{{ 'appt.keep' | t }}</button>
         <button class="btn btn-danger" (click)="confirmCancel()" [disabled]="cancelLoading">
-          {{ cancelLoading ? 'Cancelling…' : 'Yes, Cancel' }}
+          {{ (cancelLoading ? 'appt.cancelling' : 'appt.yesCancel') | t }}
         </button>
       </div>
     </div>
@@ -119,26 +122,26 @@ import { ToastService } from '../../../core/services/toast.service';
   <div class="overlay" *ngIf="reviewTarget" (click)="closeReview()">
     <div class="modal" (click)="$event.stopPropagation()" style="max-width:420px">
       <div class="modal-head">
-        <h3>Rate your visit</h3>
+        <h3>{{ 'appt.rateTitle' | t }}</h3>
         <button type="button" class="close" (click)="closeReview()">×</button>
       </div>
       <p style="font-size:14px;color:var(--text-muted);margin-bottom:16px">
-        How was your appointment with <strong>{{ reviewTarget?.doctor?.title }} {{ reviewTarget?.doctor?.fullName }}</strong>?
+        {{ 'appt.rateAsk' | t }} <strong>{{ reviewTarget?.doctor?.title }} {{ reviewTarget?.doctor?.fullName }}</strong>?
       </p>
       <div class="form-group">
-        <label>Rating (required)</label>
+        <label>{{ 'appt.ratingReq' | t }}</label>
         <div class="rate-star-row" role="group" aria-label="Star rating">
           <button type="button" *ngFor="let n of [1,2,3,4,5]" class="rate-star-btn" [class.active]="reviewStars >= n" (click)="reviewStars = n" [attr.aria-pressed]="reviewStars >= n" [attr.aria-label]="n + ' stars'">★</button>
         </div>
       </div>
       <div class="form-group">
-        <label>Review (optional)</label>
-        <textarea class="form-control" rows="4" [(ngModel)]="reviewComment" placeholder="Share your experience with other patients…" maxlength="2000"></textarea>
+        <label>{{ 'appt.reviewOpt' | t }}</label>
+        <textarea class="form-control" rows="4" [(ngModel)]="reviewComment" [placeholder]="'appt.reviewPh' | t" maxlength="2000"></textarea>
       </div>
       <div style="display:flex;gap:10px;justify-content:flex-end">
-        <button type="button" class="btn btn-ghost" (click)="closeReview()">Cancel</button>
+        <button type="button" class="btn btn-ghost" (click)="closeReview()">{{ 'common.cancel' | t }}</button>
         <button type="button" class="btn btn-brand" (click)="submitReview()" [disabled]="reviewSubmitting || reviewStars < 1">
-          {{ reviewSubmitting ? 'Submitting…' : 'Submit' }}
+          {{ (reviewSubmitting ? 'appt.submitting' : 'appt.submit') | t }}
         </button>
       </div>
     </div>
@@ -161,14 +164,14 @@ export class PatientAppointmentsComponent implements OnInit {
   all: any[] = []; filtered: any[] = []; loading = true; active = 'all';
   actionId = ''; cancelTarget: any = null; cancelReason = ''; cancelLoading = false;
   reviewTarget: any = null; reviewStars = 0; reviewComment = ''; reviewSubmitting = false;
-  nav = [{ label: 'Menu', items: [{ icon: '🏠', label: 'Dashboard', route: '/patient/dashboard' }, { icon: '🔍', label: 'Find Doctors', route: '/doctors' }, { icon: '📅', label: 'My Appointments', route: '/patient/appointments' }] }];
+  nav = [{ label: 'nav.menu', items: [{ icon: '🏠', label: 'nav.dashboard', route: '/patient/dashboard' }, { icon: '🔍', label: 'nav.findDoctors', route: '/doctors' }, { icon: '📅', label: 'nav.myAppointments', route: '/patient/appointments' }] }];
   filters = [
     { label: 'All', val: 'all' }, { label: '⏳ Pending', val: 'pending' },
     { label: '✅ Confirmed', val: 'confirmed' }, { label: '🏁 Completed', val: 'completed' },
     { label: '❌ Cancelled', val: 'cancelled' },
   ];
 
-  constructor(public auth: AuthService, private as: AppointmentService, private toast: ToastService) {}
+  constructor(public auth: AuthService, private as: AppointmentService, private toast: ToastService, public lang: LanguageService) {}
 
   ngOnInit() {
     this.as.getMyAppointments({ limit: 100 }).subscribe({

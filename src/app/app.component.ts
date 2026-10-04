@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { ThemeService } from './core/services/theme.service';
+import { LanguageService } from './core/i18n/language.service';
 import { ToastComponent } from './shared/components/toast/toast.component';
 
 @Component({
@@ -10,9 +11,9 @@ import { ToastComponent } from './shared/components/toast/toast.component';
   template: `<router-outlet /><app-toast />`
 })
 export class AppComponent implements OnInit {
-  constructor(private theme: ThemeService) {}
+  constructor(private theme: ThemeService, private language: LanguageService) {}
   ngOnInit() {
-    // ensure theme signal is evaluated on startup
     const _ = this.theme.theme();
+    const __ = this.language.lang();
   }
 }

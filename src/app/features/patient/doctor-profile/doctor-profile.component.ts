@@ -6,17 +6,19 @@ import { of } from 'rxjs';
 import { DoctorService } from '../../../core/services/doctor.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ThemeService } from '../../../core/services/theme.service';
+import { LanguageToggleComponent } from '../../../shared/components/language-toggle/language-toggle.component';
 
 @Component({
   selector: 'app-doctor-profile',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, LanguageToggleComponent],
   template: `
   <nav class="pub-nav">
     <div class="container" style="display:flex;align-items:center;gap:32px;height:100%">
       <a routerLink="/" class="nav-logo"><span>Doctory</span></a>
       <div class="nav-links"><a routerLink="/">Home</a><a routerLink="/doctors">Doctors</a></div>
       <div class="nav-right">
+        <app-lang-toggle></app-lang-toggle>
         <button class="theme-toggle" (click)="theme.toggle()">{{ theme.isDark()?'☀️':'🌙' }}</button>
         <ng-container *ngIf="auth.isLoggedIn(); else profileGuestNav">
           <div class="user-chip" [title]="userDisplayName()">

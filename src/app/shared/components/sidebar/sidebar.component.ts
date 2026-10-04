@@ -3,13 +3,16 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
 import { ThemeService } from '../../../core/services/theme.service';
+import { LanguageService } from '../../../core/i18n/language.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { LanguageToggleComponent } from '../language-toggle/language-toggle.component';
 
 export interface NavItem { icon: string; label: string; route: string; }
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterLink, RouterLinkActive, TranslatePipe, LanguageToggleComponent],
   template: `
     <aside class="sidebar">
       <div class="sb-logo">
@@ -18,19 +21,20 @@ export interface NavItem { icon: string; label: string; route: string; }
       </div>
 
       <div class="sb-section" *ngFor="let section of sections">
-        <div class="sb-label" *ngIf="section.label">{{ section.label }}</div>
+        <div class="sb-label" *ngIf="section.label">{{ section.label | t }}</div>
         <a *ngFor="let item of section.items" [routerLink]="item.route"
            routerLinkActive="active" class="sb-link">
           <div class="sb-icon">{{ item.icon }}</div>
-          {{ item.label }}
+          {{ item.label | t }}
         </a>
       </div>
 
       <div class="sb-divider"></div>
       <div class="sb-footer">
-        <button class="sb-link" style="border:none;width:100%;text-align:left;background:none;cursor:pointer" (click)="theme.toggle()">
+        <app-lang-toggle style="display:block;margin-bottom:8px;width:100%"></app-lang-toggle>
+        <button class="sb-link" style="border:none;width:100%;text-align:start;background:none;cursor:pointer" (click)="theme.toggle()">
           <div class="sb-icon">{{ theme.isDark() ? '☀️' : '🌙' }}</div>
-          {{ theme.isDark() ? 'Light Mode' : 'Dark Mode' }}
+          {{ (theme.isDark() ? 'common.lightMode' : 'common.darkMode') | t }}
         </button>
         <div class="sb-divider" style="margin:8px 0"></div>
         <div class="sb-user">
@@ -40,9 +44,9 @@ export interface NavItem { icon: string; label: string; route: string; }
           </div>
           <div class="sb-user-info">
             <strong>{{ userName }}</strong>
-            <span>{{ auth.getRole() }}</span>
+            <span>{{ roleLabel }}</span>
           </div>
-          <button style="border:none;background:none;cursor:pointer;font-size:18px;color:var(--text-muted)" title="Logout" (click)="auth.logout()">➜] Logout</button>
+          <button style="border:none;background:none;cursor:pointer;font-size:18px;color:var(--text-muted)" [title]="'nav.logout' | t" (click)="auth.logout()">➜]</button>
         </div>
       </div>
     </aside>
@@ -51,11 +55,11 @@ export interface NavItem { icon: string; label: string; route: string; }
 export class SidebarComponent {
   @Input() sections: { label?: string; items: NavItem[] }[] = [];
 
-  constructor(public auth: AuthService, public theme: ThemeService) {}
+  constructor(public auth: AuthService, public theme: ThemeService, public lang: LanguageService) {}
 
   get roleLabel() {
     const r = this.auth.getRole();
-    return r === 'admin' ? 'Admin' : r === 'doctor' ? 'Doctor' : 'Patient';
+    return this.lang.role(r || 'patient');
   }
   get userName() { return this.auth.currentUser()?.fullName?.split(' ')[0] || 'User'; }
   get profilePhotoUrl(): string {

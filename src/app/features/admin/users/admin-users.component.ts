@@ -79,7 +79,7 @@ import { environment } from '../../../../environments/environment';
 })
 export class AdminUsersComponent implements OnInit {
   users: any[] = []; loading = true; search = ''; page = 1; pages = 1; total = 0;
-  nav = [{ label: 'Admin', items: [{ icon: '📊', label: 'Dashboard', route: '/admin/dashboard' }, { icon: '👥', label: 'Users', route: '/admin/users' }, { icon: '👨‍⚕️', label: 'Doctors', route: '/admin/doctors' }, { icon: '🏥', label: 'Clinics', route: '/admin/clinics' }] }];
+  nav = [{ label: 'nav.admin', items: [{ icon: '📊', label: 'nav.dashboard', route: '/admin/dashboard' }, { icon: '👥', label: 'nav.users', route: '/admin/users' }, { icon: '👨‍⚕️', label: 'nav.doctors', route: '/admin/doctors' }, { icon: '🏥', label: 'nav.clinics', route: '/admin/clinics' }] }];
   private st: any;
   constructor(public auth: AuthService, private http: HttpClient, private toast: ToastService) {}
   ngOnInit() { this.load(); }

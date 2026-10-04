@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
 import { ThemeService } from '../../../core/services/theme.service';
+import { LanguageToggleComponent } from '../../../shared/components/language-toggle/language-toggle.component';
 import { ToastService } from '../../../core/services/toast.service';
 
 function matchPasswords(c: AbstractControl): ValidationErrors | null {
@@ -16,7 +17,7 @@ function matchPasswords(c: AbstractControl): ValidationErrors | null {
 @Component({
   selector: 'app-reset-password',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, LanguageToggleComponent],
   template: `
   <div class="auth-page">
     <div class="auth-panel">
@@ -33,6 +34,7 @@ function matchPasswords(c: AbstractControl): ValidationErrors | null {
             <h1 style="font-size:26px;margin-bottom:4px">New password</h1>
             <p style="color:var(--text-muted);font-size:14px" *ngIf="email">{{ email }}</p>
           </div>
+          <app-lang-toggle></app-lang-toggle>
           <button class="theme-toggle" (click)="theme.toggle()">{{ theme.isDark() ? '☀️' : '🌙' }}</button>
         </div>
 

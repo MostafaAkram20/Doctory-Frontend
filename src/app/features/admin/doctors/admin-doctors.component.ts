@@ -157,7 +157,7 @@ import { ToastService } from '../../../core/services/toast.service';
 export class AdminDoctorsComponent implements OnInit {
   doctors: any[] = []; loading = true; search = ''; specialty = ''; total = 0;
   editTarget: any = null; editForm: FormGroup; saving = false;
-  nav = [{ label: 'Admin', items: [{ icon: '📊', label: 'Dashboard', route: '/admin/dashboard' }, { icon: '👥', label: 'Users', route: '/admin/users' }, { icon: '👨‍⚕️', label: 'Doctors', route: '/admin/doctors' }, { icon: '🏥', label: 'Clinics', route: '/admin/clinics' }] }];
+  nav = [{ label: 'nav.admin', items: [{ icon: '📊', label: 'nav.dashboard', route: '/admin/dashboard' }, { icon: '👥', label: 'nav.users', route: '/admin/users' }, { icon: '👨‍⚕️', label: 'nav.doctors', route: '/admin/doctors' }, { icon: '🏥', label: 'nav.clinics', route: '/admin/clinics' }] }];
   private st: any;
 
   constructor(public auth: AuthService, public ds: DoctorService, private fb: FormBuilder, private toast: ToastService) {

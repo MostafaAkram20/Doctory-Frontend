@@ -5,11 +5,12 @@ import { FormsModule } from '@angular/forms';
 import { DoctorService } from '../../../core/services/doctor.service';
 import { ThemeService } from '../../../core/services/theme.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { LanguageToggleComponent } from '../../../shared/components/language-toggle/language-toggle.component';
 
 @Component({
   selector: 'app-doctors',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, RouterLink, FormsModule, LanguageToggleComponent],
   template: `
   <!-- NAV -->
   <nav class="pub-nav">
@@ -20,6 +21,7 @@ import { AuthService } from '../../../core/services/auth.service';
         <a routerLink="/doctors" class="active">Find Doctors</a>
       </div>
       <div class="nav-right">
+        <app-lang-toggle></app-lang-toggle>
         <button class="theme-toggle" (click)="theme.toggle()">{{ theme.isDark()?'☀️':'🌙' }}</button>
         <ng-container *ngIf="auth.isLoggedIn(); else doctorsGuestNav">
           <div class="user-chip" [title]="userDisplayName()">

@@ -203,7 +203,7 @@ export class BookAppointmentComponent implements OnInit {
   datesWithSlots: string[] = [];
   reason = ''; sympInput = ''; loading = false; err = '';
   minDate = new Date().toISOString().split('T')[0];
-  nav = [{ items: [{ icon:'🏠', label:'Dashboard', route:'/patient/dashboard' }, { icon:'🔍', label:'Find Doctors', route:'/doctors' }, { icon:'📅', label:'My Appointments', route:'/patient/appointments' }] }];
+  nav = [{ items: [{ icon:'🏠', label:'nav.dashboard', route:'/patient/dashboard' }, { icon:'🔍', label:'nav.findDoctors', route:'/doctors' }, { icon:'📅', label:'nav.myAppointments', route:'/patient/appointments' }] }];
 
   constructor(private route: ActivatedRoute, private router: Router, private ds: DoctorService, private cs: ClinicService, private as: AppointmentService, private toast: ToastService) {}
 

@@ -102,7 +102,7 @@ export class DoctorDashboardComponent implements OnInit {
   all: any[] = []; pending: any[] = []; todayAppts: any[] = [];
   loading = true; busy = ''; today = new Date();
   stats: any[] = [];
-  nav = [{ label: 'Menu', items: [{ icon: '🏠', label: 'Dashboard', route: '/doctor/dashboard' }, { icon: '📅', label: 'Appointments', route: '/doctor/appointments' }] }];
+  nav = [{ label: 'nav.menu', items: [{ icon: '🏠', label: 'nav.dashboard', route: '/doctor/dashboard' }, { icon: '📅', label: 'nav.appointments', route: '/doctor/appointments' }] }];
 
   constructor(public auth: AuthService, private as: AppointmentService, private toast: ToastService) {}
 

@@ -4,11 +4,14 @@ import { CommonModule } from '@angular/common';
 import { ThemeService } from '../../../core/services/theme.service';
 import { DoctorService } from '../../../core/services/doctor.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { LanguageService } from '../../../core/i18n/language.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { LanguageToggleComponent } from '../../../shared/components/language-toggle/language-toggle.component';
 
 @Component({
   selector: 'app-landing',
   standalone: true,
-  imports: [RouterLink, CommonModule],
+  imports: [RouterLink, CommonModule, TranslatePipe, LanguageToggleComponent],
   template: `
   <div class="landing-page">
   <!-- NAV -->
@@ -22,6 +25,7 @@ import { AuthService } from '../../../core/services/auth.service';
         <a href="#specialties">Specialties</a>
       </div>
       <div class="nav-right">
+        <app-lang-toggle></app-lang-toggle>
         <button class="theme-toggle" (click)="theme.toggle()" [title]="theme.isDark() ? 'Light mode' : 'Dark mode'">
           {{ theme.isDark() ? '☀️' : '🌙' }}
         </button>

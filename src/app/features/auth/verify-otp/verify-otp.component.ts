@@ -4,19 +4,20 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
 import { ThemeService } from '../../../core/services/theme.service';
+import { LanguageToggleComponent } from '../../../shared/components/language-toggle/language-toggle.component';
 import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-verify-otp',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, LanguageToggleComponent],
   template: `
   <div class="verify-page">
     <div class="verify-bg-orb orb1"></div>
     <div class="verify-bg-orb orb2"></div>
 
     <div class="verify-card anim-scale">
-      <button class="theme-toggle" style="position:absolute;top:20px;right:20px" (click)="theme.toggle()">{{ theme.isDark()?'☀️':'🌙' }}</button>
+      <div style="position:absolute;top:20px;right:20px;display:flex;gap:8px"><app-lang-toggle></app-lang-toggle><button class="theme-toggle" (click)="theme.toggle()">{{ theme.isDark()?'☀️':'🌙' }}</button></div>
 
       <a routerLink="/" class="verify-logo">Doct<span>ory</span></a>
 

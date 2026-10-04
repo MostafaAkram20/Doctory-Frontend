@@ -4,13 +4,14 @@ import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
 import { ThemeService } from '../../../core/services/theme.service';
+import { LanguageToggleComponent } from '../../../shared/components/language-toggle/language-toggle.component';
 import { ToastService } from '../../../core/services/toast.service';
 import { DoctorService } from '../../../core/services/doctor.service';
 
 @Component({
   selector: 'app-doctor-register',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, LanguageToggleComponent],
   template: `
   <div class="auth-page">
     <div class="auth-panel" style="background:linear-gradient(145deg,#0a2010,#0d2d1a 50%,#0a1f2e)">
@@ -35,6 +36,7 @@ import { DoctorService } from '../../../core/services/doctor.service';
             <div class="doc-badge-tag">👨‍⚕️ Doctor Registration</div>
             <h1 style="font-size:24px;margin-top:8px">Create Your Profile</h1>
           </div>
+          <app-lang-toggle></app-lang-toggle>
           <button class="theme-toggle" (click)="theme.toggle()">{{ theme.isDark()?'☀️':'🌙' }}</button>
         </div>
 

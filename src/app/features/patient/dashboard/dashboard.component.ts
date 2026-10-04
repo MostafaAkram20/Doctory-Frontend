@@ -4,22 +4,24 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { AppointmentService } from '../../../core/services/appointment.service';
 import { SidebarComponent } from '../../../shared/components/sidebar/sidebar.component';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { LanguageService } from '../../../core/i18n/language.service';
 
 @Component({
   selector: 'app-patient-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, SidebarComponent],
+  imports: [CommonModule, RouterLink, SidebarComponent, TranslatePipe],
   template: `
   <div class="app-shell">
     <app-sidebar [sections]="nav"></app-sidebar>
     <div class="main-wrap">
       <div class="topbar">
         <div>
-          <h2>Good {{ greeting }}, {{ firstName }} 👋</h2>
-          <p style="font-size:13px;color:var(--text-muted);margin-top:2px">Here's your health overview</p>
+          <h2>{{ 'dash.good' | t }} {{ greeting | t }}, {{ firstName }} 👋</h2>
+          <p style="font-size:13px;color:var(--text-muted);margin-top:2px">{{ 'dash.overview' | t }}</p>
         </div>
         <div class="topbar-right">
-          <a routerLink="/doctors" class="btn btn-brand btn-sm">+ Book Appointment</a>
+          <a routerLink="/doctors" class="btn btn-brand btn-sm">{{ 'dash.bookAppt' | t }}</a>
         </div>
       </div>
 
@@ -30,7 +32,7 @@ import { SidebarComponent } from '../../../shared/components/sidebar/sidebar.com
             <div class="sc-icon" [style.background]="s.bg">{{ s.icon }}</div>
             <div class="sc-info">
               <div class="sc-val">{{ s.val }}</div>
-              <div class="sc-label">{{ s.label }}</div>
+              <div class="sc-label">{{ s.label | t }}</div>
             </div>
           </div>
         </div>
@@ -39,8 +41,8 @@ import { SidebarComponent } from '../../../shared/components/sidebar/sidebar.com
           <!-- Recent Appointments -->
           <div class="card">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-              <h3 style="font-size:15px">Recent Appointments</h3>
-              <a routerLink="/patient/appointments" class="btn btn-ghost btn-sm">View All</a>
+              <h3 style="font-size:15px">{{ 'dash.recent' | t }}</h3>
+              <a routerLink="/patient/appointments" class="btn btn-ghost btn-sm">{{ 'common.viewAllShort' | t }}</a>
             </div>
 
             <div *ngIf="loading" style="display:flex;flex-direction:column;gap:12px">
@@ -61,28 +63,28 @@ import { SidebarComponent } from '../../../shared/components/sidebar/sidebar.com
                   <strong>{{ a.date | date:'MMM d' }}</strong>
                   <span>{{ a.Time }}</span>
                 </div>
-                <span class="badge badge-{{ a.status }}">{{ a.status }}</span>
+                <span class="badge badge-{{ a.status }}">{{ ('status.' + a.status) | t }}</span>
               </div>
             </div>
 
             <div class="empty-state" style="padding:36px" *ngIf="!loading && appointments.length === 0">
               <div class="es-icon">📅</div>
-              <h3>No appointments yet</h3>
-              <p>Book your first appointment now</p>
-              <a routerLink="/doctors" class="btn btn-brand btn-sm mt-16">Find a Doctor</a>
+              <h3>{{ 'dash.noAppt' | t }}</h3>
+              <p>{{ 'dash.bookFirst' | t }}</p>
+              <a routerLink="/doctors" class="btn btn-brand btn-sm mt-16">{{ 'dash.findDoctor' | t }}</a>
             </div>
           </div>
 
           <!-- Quick Actions + Specialties -->
           <div style="display:flex;flex-direction:column;gap:16px">
             <div class="card">
-              <h3 style="font-size:15px;margin-bottom:14px">Quick Actions</h3>
+              <h3 style="font-size:15px;margin-bottom:14px">{{ 'dash.quick' | t }}</h3>
               <div style="display:flex;flex-direction:column;gap:8px">
                 <a *ngFor="let q of quickActions" [routerLink]="q.route" [queryParams]="q.params" class="quick-action">
                   <div class="qa-icon">{{ q.icon }}</div>
                   <div>
-                    <strong style="font-size:13px;display:block">{{ q.label }}</strong>
-                    <span style="font-size:11px;color:var(--text-muted)">{{ q.sub }}</span>
+                    <strong style="font-size:13px;display:block">{{ q.label | t }}</strong>
+                    <span style="font-size:11px;color:var(--text-muted)">{{ q.sub | t }}</span>
                   </div>
                   <span style="margin-left:auto;color:var(--text-muted);font-size:16px">›</span>
                 </a>
@@ -90,11 +92,11 @@ import { SidebarComponent } from '../../../shared/components/sidebar/sidebar.com
             </div>
 
             <div class="card">
-              <h3 style="font-size:15px;margin-bottom:14px">Browse Specialties</h3>
+              <h3 style="font-size:15px;margin-bottom:14px">{{ 'dash.browseSpecs' | t }}</h3>
               <div class="spec-mini-grid">
                 <a *ngFor="let s of specialties" [routerLink]="'/doctors'" [queryParams]="{specialty:s.name}" class="spec-mini">
                   <span style="font-size:24px">{{ s.icon }}</span>
-                  <span style="font-size:11px;font-weight:500;text-align:center">{{ s.name }}</span>
+                  <span style="font-size:11px;font-weight:500;text-align:center">{{ lang.spec(s.name) }}</span>
                 </a>
               </div>
             </div>
@@ -121,22 +123,22 @@ export class PatientDashboardComponent implements OnInit {
   appointments: any[] = [];
   loading = true;
   stats: any[] = [];
-  nav = [{ label: 'Menu', items: [{ icon: '🏠', label: 'Dashboard', route: '/patient/dashboard' }, { icon: '🔍', label: 'Find Doctors', route: '/doctors' }, { icon: '📅', label: 'My Appointments', route: '/patient/appointments' }] }];
+  nav = [{ label: 'nav.menu', items: [{ icon: '🏠', label: 'nav.dashboard', route: '/patient/dashboard' }, { icon: '🔍', label: 'nav.findDoctors', route: '/doctors' }, { icon: '📅', label: 'nav.myAppointments', route: '/patient/appointments' }] }];
   quickActions = [
-    { icon: '🔍', label: 'Find a Doctor', sub: 'Browse 500+ specialists', route: '/doctors', params: {} },
-    { icon: '❤️', label: 'Cardiology', sub: 'Heart specialists', route: '/doctors', params: { specialty: 'Cardiology' } },
-    { icon: '🧠', label: 'Neurology', sub: 'Brain & nervous system', route: '/doctors', params: { specialty: 'Neurology' } },
-    { icon: '📋', label: 'All Appointments', sub: 'View your history', route: '/patient/appointments', params: {} },
+    { icon: '🔍', label: 'dash.qaFind', sub: 'dash.qaFindSub', route: '/doctors', params: {} },
+    { icon: '❤️', label: 'specialty.Cardiology', sub: 'dash.qaCardio', route: '/doctors', params: { specialty: 'Cardiology' } },
+    { icon: '🧠', label: 'specialty.Neurology', sub: 'dash.qaNeuro', route: '/doctors', params: { specialty: 'Neurology' } },
+    { icon: '📋', label: 'dash.qaAll', sub: 'dash.qaAllSub', route: '/patient/appointments', params: {} },
   ];
   specialties = [
     { name: 'Cardiology', icon: '❤️' }, { name: 'Dermatology', icon: '🧴' },
     { name: 'Neurology', icon: '🧠' }, { name: 'Pediatrics', icon: '👶' }, { name: 'Psychiatry', icon: '🧘' },
   ];
 
-  constructor(public auth: AuthService, private as: AppointmentService) {}
+  constructor(public auth: AuthService, private as: AppointmentService, public lang: LanguageService) {}
 
   get firstName() { return this.auth.currentUser()?.fullName?.split(' ')[0] || 'there'; }
-  get greeting() { const h = new Date().getHours(); return h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening'; }
+  get greeting() { const h = new Date().getHours(); return h < 12 ? 'dash.morning' : h < 17 ? 'dash.afternoon' : 'dash.evening'; }
 
   ngOnInit() {
     this.as.getMyAppointments({ limit: 5 }).subscribe({
@@ -146,10 +148,10 @@ export class PatientDashboardComponent implements OnInit {
           this.appointments = r.data.appointments;
           const all = r.data.appointments;
           this.stats = [
-            { icon: '📅', label: 'Total Appointments', val: r.data.pagination.total, bg: 'rgba(99,102,241,.12)' },
-            { icon: '✅', label: 'Completed', val: all.filter((a: any) => a.status === 'completed').length, bg: 'rgba(16,185,129,.12)' },
-            { icon: '⏳', label: 'Pending', val: all.filter((a: any) => a.status === 'pending').length, bg: 'rgba(245,158,11,.12)' },
-            { icon: '❌', label: 'Cancelled', val: all.filter((a: any) => a.status === 'cancelled').length, bg: 'rgba(244,63,94,.12)' },
+            { icon: '📅', label: 'dash.statTotal', val: r.data.pagination.total, bg: 'rgba(99,102,241,.12)' },
+            { icon: '✅', label: 'dash.statCompleted', val: all.filter((a: any) => a.status === 'completed').length, bg: 'rgba(16,185,129,.12)' },
+            { icon: '⏳', label: 'dash.statPending', val: all.filter((a: any) => a.status === 'pending').length, bg: 'rgba(245,158,11,.12)' },
+            { icon: '❌', label: 'dash.statCancelled', val: all.filter((a: any) => a.status === 'cancelled').length, bg: 'rgba(244,63,94,.12)' },
           ];
         }
       },

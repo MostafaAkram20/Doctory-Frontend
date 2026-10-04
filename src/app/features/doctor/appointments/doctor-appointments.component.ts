@@ -98,7 +98,7 @@ export class DoctorAppointmentsComponent implements OnInit {
   all: any[] = []; filtered: any[] = []; loading = true; active = 'all'; busy = '';
   notesId = ''; noteTxt = ''; prescTxt = '';
   filters = ['all', 'pending', 'confirmed', 'completed', 'cancelled', 'no_show'];
-  nav = [{ label: 'Menu', items: [{ icon: '🏠', label: 'Dashboard', route: '/doctor/dashboard' }, { icon: '📅', label: 'Appointments', route: '/doctor/appointments' }] }];
+  nav = [{ label: 'nav.menu', items: [{ icon: '🏠', label: 'nav.dashboard', route: '/doctor/dashboard' }, { icon: '📅', label: 'nav.appointments', route: '/doctor/appointments' }] }];
 
   constructor(public auth: AuthService, private as: AppointmentService, private toast: ToastService) {}
 

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-theme="light">
+<html lang="en" dir="ltr" data-theme="light">
 <head>
   <meta charset="utf-8">
   <title>Doctory — Healthcare Booking</title>
@@ -13,9 +13,13 @@
 <body>
   <app-root></app-root>
   <script>
-    // Apply saved theme immediately to prevent flash
     const t = localStorage.getItem('doctory-theme');
     if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    const l = localStorage.getItem('doctory-lang');
+    if (l === 'ar') {
+      document.documentElement.setAttribute('lang', 'ar');
+      document.documentElement.setAttribute('dir', 'rtl');
+    }
   </script>
 </body>
 </html>

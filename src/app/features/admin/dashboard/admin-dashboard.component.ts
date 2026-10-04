@@ -66,7 +66,7 @@ import { environment } from '../../../../environments/environment';
 })
 export class AdminDashboardComponent implements OnInit {
   stats: any[] = []; loading = true;
-  nav = [{ label: 'Admin', items: [{ icon: '📊', label: 'Dashboard', route: '/admin/dashboard' }, { icon: '👥', label: 'Users', route: '/admin/users' }, { icon: '👨‍⚕️', label: 'Doctors', route: '/admin/doctors' }, { icon: '🏥', label: 'Clinics', route: '/admin/clinics' }] }];
+  nav = [{ label: 'nav.admin', items: [{ icon: '📊', label: 'nav.dashboard', route: '/admin/dashboard' }, { icon: '👥', label: 'nav.users', route: '/admin/users' }, { icon: '👨‍⚕️', label: 'nav.doctors', route: '/admin/doctors' }, { icon: '🏥', label: 'nav.clinics', route: '/admin/clinics' }] }];
   constructor(public auth: AuthService, private http: HttpClient) {}
   ngOnInit() {
     this.http.get<any>(`${environment.apiUrl}/admin/dashboard`).subscribe({

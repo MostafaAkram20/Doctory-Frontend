@@ -4,12 +4,15 @@ import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
 import { ThemeService } from '../../../core/services/theme.service';
+import { LanguageService } from '../../../core/i18n/language.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { LanguageToggleComponent } from '../../../shared/components/language-toggle/language-toggle.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, TranslatePipe, LanguageToggleComponent],
   template: `
   <div class="auth-page">
     <!-- Left Panel -->
@@ -20,19 +23,19 @@ import { ToastService } from '../../../core/services/toast.service';
           <div class="av-blob">🏥</div>
           <div class="av-stat av-stat-1">
             <div class="av-stat-icon">⭐</div>
-            <div><strong>4.9 / 5</strong><br><span>Patient Rating</span></div>
+            <div><strong>4.9 / 5</strong><br><span>{{ 'auth.patientRating' | t }}</span></div>
           </div>
           <div class="av-stat av-stat-2">
             <div class="av-stat-icon">👨‍⚕️</div>
-            <div><strong>500+</strong><br><span>Specialists</span></div>
+            <div><strong>500+</strong><br><span>{{ 'auth.specialists' | t }}</span></div>
           </div>
           <div class="av-stat av-stat-3">
             <div class="av-stat-icon">✅</div>
-            <div><strong>50K+</strong><br><span>Appointments</span></div>
+            <div><strong>50K+</strong><br><span>{{ 'auth.appointments' | t }}</span></div>
           </div>
         </div>
         <div class="auth-panel-quote">
-          <p>"The best healthcare experience I've ever had. Booked in under 2 minutes."</p>
+          <p>{{ 'auth.quote' | t }}</p>
           <!-- <div class="quote-author"><div class="qa-avatar">S</div><div><strong></strong><span>Cairo, Egypt</span></div></div> -->
         </div>
       </div>
@@ -44,59 +47,62 @@ import { ToastService } from '../../../core/services/toast.service';
         <!-- Top Bar -->
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:36px">
           <div>
-            <h1 style="font-size:28px;margin-bottom:4px">Welcome back</h1>
-            <p style="color:var(--text-muted);font-size:14px">Sign in to your account</p>
+            <h1 style="font-size:28px;margin-bottom:4px">{{ 'auth.welcomeBack' | t }}</h1>
+            <p style="color:var(--text-muted);font-size:14px">{{ 'auth.signInSub' | t }}</p>
           </div>
-          <button class="theme-toggle" (click)="theme.toggle()">{{ theme.isDark() ? '☀️' : '🌙' }}</button>
+          <div style="display:flex;align-items:center;gap:8px">
+            <app-lang-toggle></app-lang-toggle>
+            <button class="theme-toggle" (click)="theme.toggle()">{{ theme.isDark() ? '☀️' : '🌙' }}</button>
+          </div>
         </div>
 
         <!-- Role Switch -->
         <div class="role-switch">
           <button [class.rs-active]="role==='patient'" (click)="role='patient'">
-            <span>🧑</span> Patient
+            <span>🧑</span> {{ 'common.patient' | t }}
           </button>
           <button [class.rs-active]="role==='doctor'" (click)="role='doctor'">
-            <span>👨‍⚕️</span> Doctor
+            <span>👨‍⚕️</span> {{ 'common.doctor' | t }}
           </button>
           <button [class.rs-active]="role==='admin'" (click)="role='admin'">
-            <span>🛡</span> Admin
+            <span>🛡</span> {{ 'common.admin' | t }}
           </button>
         </div>
 
         <form [formGroup]="form" (ngSubmit)="submit()">
           <div class="form-group">
-            <label>Email Address</label>
+            <label>{{ 'auth.email' | t }}</label>
             <div class="input-icon-wrap">
               <span class="input-icon">✉️</span>
               <input class="form-control" type="email" formControlName="email" placeholder="you@example.com">
             </div>
-            <div class="error-msg" *ngIf="form.get('email')?.touched && form.get('email')?.invalid">Enter a valid email</div>
+            <div class="error-msg" *ngIf="form.get('email')?.touched && form.get('email')?.invalid">{{ 'auth.validEmail' | t }}</div>
           </div>
 
           <div class="form-group">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-              <label style="margin:0">Password</label>
-              <a routerLink="/forgot-password" [queryParams]="{ role: role }" style="font-size:13px;font-weight:600;color:var(--brand-1)">Forgot password?</a>
+              <label style="margin:0">{{ 'auth.password' | t }}</label>
+              <a routerLink="/forgot-password" [queryParams]="{ role: role }" style="font-size:13px;font-weight:600;color:var(--brand-1)">{{ 'auth.forgot' | t }}</a>
             </div>
             <div class="input-icon-wrap">
               <span class="input-icon">🔒</span>
               <input class="form-control" [type]="showPass?'text':'password'" formControlName="password" placeholder="••••••••">
               <button type="button" class="input-icon-right" (click)="showPass=!showPass">{{ showPass?'🙈':'👁' }}</button>
             </div>
-            <div class="error-msg" *ngIf="form.get('password')?.touched && form.get('password')?.invalid">Password is required</div>
+            <div class="error-msg" *ngIf="form.get('password')?.touched && form.get('password')?.invalid">{{ 'auth.passwordRequired' | t }}</div>
           </div>
 
           <div class="error-box" *ngIf="err">{{ err }}</div>
 
           <button type="submit" class="btn btn-brand btn-lg btn-block" [disabled]="loading" style="margin-top:8px">
             <span class="spinner" style="width:18px;height:18px" *ngIf="loading"></span>
-            {{ loading ? 'Signing in…' : 'Sign In' }}
+            {{ (loading ? 'auth.signingIn' : 'nav.signIn') | t }}
           </button>
         </form>
 
         <div class="auth-links">
-          <p>New to Doctory? <a routerLink="/register">Create patient account</a></p>
-          <p>Are you a doctor? <a routerLink="/doctor-register">Join as doctor</a></p>
+          <p>{{ 'auth.newTo' | t }} <a routerLink="/register">{{ 'auth.createPatient' | t }}</a></p>
+          <p>{{ 'auth.areYouDoctor' | t }} <a routerLink="/doctor-register">{{ 'auth.joinAsDoctor' | t }}</a></p>
         </div>
       </div>
     </div>
@@ -129,7 +135,7 @@ export class LoginComponent {
   showPass = false;
   err = '';
 
-  constructor(private fb: FormBuilder, public auth: AuthService, public theme: ThemeService, private toast: ToastService, private router: Router) {
+  constructor(private fb: FormBuilder, public auth: AuthService, public theme: ThemeService, private toast: ToastService, private router: Router, public lang: LanguageService) {
     this.form = this.fb.group({ email: ['', [Validators.required, Validators.email]], password: ['', Validators.required] });
   }
 
@@ -142,12 +148,12 @@ export class LoginComponent {
       next: (r: any) => {
         this.loading = false;
         if (r.success) {
-          this.toast.success('Welcome back!');
+          this.toast.success(this.lang.t('toast.welcome'));
           const role = this.auth.getRole();
           this.router.navigate([role === 'admin' ? '/admin/dashboard' : role === 'doctor' ? '/doctor/dashboard' : '/patient/dashboard']);
         } else { this.err = r.message; }
       },
-      error: (e: any) => { this.loading = false; this.err = e.error?.message || 'Login failed.'; }
+      error: (e: any) => { this.loading = false; this.err = e.error?.message || this.lang.t('toast.loginFail'); }
     });
   }
 }
